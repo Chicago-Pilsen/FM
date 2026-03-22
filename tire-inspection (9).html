@@ -1,0 +1,1308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tire Condition Inspection</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#1a1f1a;color:#d4ddd4;font-family:'Segoe UI',system-ui,sans-serif;font-size:14px;min-height:100vh;}
+
+/* ── Header ── */
+.page-header{background:#141814;border-bottom:1px solid #2a302a;padding:12px 20px;display:flex;align-items:center;gap:10px;position:sticky;top:0;z-index:200;}
+.page-header .icon{font-size:16px;}
+.page-header .title{font-size:12px;font-weight:700;letter-spacing:.22em;color:#c8d8c8;text-transform:uppercase;flex:1;}
+.header-actions{display:flex;gap:8px;}
+.hdr-btn{padding:6px 12px;border:1px solid #3a423a;background:#1e231e;color:#8a9e8a;font-size:11px;font-weight:700;letter-spacing:.08em;cursor:pointer;border-radius:4px;font-family:inherit;transition:all .15s;}
+.hdr-btn:hover{border-color:#5a7a3a;color:#c8d8c8;}
+.hdr-btn.danger{border-color:#5a2020;color:#e05050;}
+.hdr-btn.danger:hover{background:#220d0d;}
+
+.wrap{max-width:1100px;margin:0 auto;padding:18px 20px;}
+
+/* ── DOT Guide (collapsible) ── */
+.dot-guide{background:#1e231e;border:1px solid #2a302a;border-radius:6px;padding:10px 16px;margin-bottom:14px;font-size:12px;line-height:1.7;color:#8a9e8a;cursor:pointer;user-select:none;}
+.dot-guide summary{list-style:none;display:flex;align-items:center;gap:8px;font-size:10px;font-weight:700;letter-spacing:.15em;color:#5a6e5a;text-transform:uppercase;}
+.dot-guide summary::after{content:'▼';font-size:9px;margin-left:auto;}
+.dot-guide[open] summary::after{content:'▲';}
+.dot-guide .lbl{color:#c8f040;font-weight:700;}
+.dot-guide .dot-hl{color:#c8f040;font-weight:700;font-family:monospace;}
+.dot-guide .yr6{color:#e8b840;font-weight:700;}
+.dot-guide .yr10{color:#c8f040;font-weight:700;}
+.dot-guide-body{padding-top:8px;}
+
+/* ── VIN ── */
+.vin-section{background:#1e231e;border:1px solid #2a302a;border-radius:6px;padding:14px 16px;margin-bottom:14px;}
+.vin-title{font-size:10px;font-weight:700;letter-spacing:.18em;color:#c8f040;text-transform:uppercase;margin-bottom:10px;}
+.vin-row{display:flex;gap:8px;align-items:flex-end;flex-wrap:wrap;}
+.vin-input-wrap{flex:1;min-width:160px;}
+.vin-input-wrap label{display:block;font-size:10px;font-weight:600;letter-spacing:.12em;color:#5a6e5a;text-transform:uppercase;margin-bottom:4px;}
+.vin-input{width:100%;background:#141814;border:1px solid #2e342e;color:#d4ddd4;font-size:14px;padding:8px 10px;outline:none;border-radius:4px;font-family:monospace;letter-spacing:.06em;text-transform:uppercase;transition:border-color .2s;}
+.vin-input:focus{border-color:#5a7a3a;}
+.vin-input.valid{border-color:#3a5a3a;background:#1a2a1a;color:#6ec86e;}
+.vin-input.invalid{border-color:#6a2020;background:#220d0d;color:#e05050;}
+.vin-input::placeholder{color:#3a4a3a;font-family:inherit;letter-spacing:normal;text-transform:none;}
+.vin-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border:1px solid #3a5a3a;background:#2a4a2a;color:#80c080;font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;transition:background .2s;font-family:inherit;white-space:nowrap;}
+.vin-btn:hover{background:#3a5a3a;color:#c8f040;}
+.vin-btn:disabled{opacity:.4;cursor:not-allowed;}
+.vin-scan-btn{display:inline-flex;align-items:center;gap:5px;padding:8px 14px;border:1px solid #5a4a1a;background:#3a3010;color:#e8b840;font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;font-family:inherit;white-space:nowrap;position:relative;overflow:hidden;}
+.vin-scan-btn:hover{background:#4a4018;}
+.vin-scan-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
+.vin-result{margin-top:10px;font-size:12px;font-family:monospace;line-height:1.8;}
+.vin-result .vr-label{color:#5a6e5a;letter-spacing:.1em;}
+.vin-result .vr-val{color:#c8d8c8;font-weight:700;margin-left:4px;}
+.vin-result .vr-tire{color:#c8f040;font-weight:700;}
+.vin-result .vr-err{color:#e05050;}
+.vin-loading{display:none;font-size:11px;color:#8a9e8a;font-family:monospace;margin-top:6px;animation:pulse .8s ease-in-out infinite alternate;}
+.vin-loading.show{display:block;}
+@keyframes pulse{from{opacity:.4}to{opacity:1}}
+
+.drive-row{display:flex;gap:6px;margin-top:8px;flex-wrap:wrap;}
+.drive-opt{display:flex;align-items:center;gap:5px;cursor:pointer;padding:5px 10px;border:1px solid #2e342e;border-radius:4px;transition:border-color .15s,background .15s;}
+.drive-opt:hover{border-color:#5a6e5a;}
+.drive-opt input{display:none;}
+.drive-opt span{font-size:12px;color:#8a9e8a;font-weight:600;letter-spacing:.06em;}
+.drive-opt.selected{border-color:#5a7a3a;background:#1e2e1e;}
+.drive-opt.selected span{color:#c8f040;}
+
+/* ── Alignment ── */
+.alignment-row{background:#1e231e;border:1px solid #2a302a;border-radius:6px;padding:12px 18px;margin-bottom:16px;display:flex;align-items:center;justify-content:space-between;transition:border-color .3s,background .3s;}
+.alignment-row.active{border-color:#7a6a1a;background:#211e10;}
+.alignment-row .left .label{font-size:14px;font-weight:600;color:#d4ddd4;margin-bottom:2px;}
+.alignment-row .left .sub{font-size:11px;color:#6a7e6a;font-family:monospace;transition:color .3s;}
+.alignment-row.active .left .sub{color:#e8b840;}
+.toggle-wrap{position:relative;width:46px;height:24px;flex-shrink:0;}
+.toggle-wrap input{opacity:0;width:0;height:0;position:absolute;}
+.toggle-slider{position:absolute;inset:0;background:#3a423a;border-radius:24px;transition:background .3s;}
+.toggle-slider::before{content:'';position:absolute;width:18px;height:18px;left:3px;top:3px;background:#8a9a8a;border-radius:50%;transition:transform .3s,background .3s;}
+.toggle-wrap input:checked + .toggle-slider{background:#4a6a2a;}
+.toggle-wrap input:checked + .toggle-slider::before{transform:translateX(22px);background:#c8f040;}
+
+/* ── Progress ── */
+.progress-row{display:flex;gap:6px;margin-bottom:16px;}
+.progress-step{flex:1;text-align:center;}
+.progress-step-inner{padding:7px 4px;border-radius:5px;border:1px solid #2e342e;background:#1a1e1a;transition:all .25s;cursor:pointer;}
+.progress-step-inner:hover{border-color:#5a6e5a;}
+.ps-done .progress-step-inner{border-color:#3a5a3a;background:#1a2a1a;}
+.ps-active .progress-step-inner{border-color:#5a7a3a;background:#1e2e1e;}
+.ps-incomplete .progress-step-inner{border-color:#5a2020;background:#1e0d0d;}
+.progress-step-check{font-size:13px;margin-bottom:1px;}
+.progress-step-name{font-size:9px;font-weight:700;letter-spacing:.08em;text-transform:uppercase;}
+.ps-done .progress-step-name{color:#6ec86e;}
+.ps-active .progress-step-name{color:#c8f040;}
+.ps-incomplete .progress-step-name{color:#e05050;}
+.ps-waiting .progress-step-name{color:#4a5a4a;}
+
+/* ── Speed Toolbar (global quick actions) ── */
+.speed-toolbar{background:#141814;border:1px solid #2a302a;border-radius:6px;padding:10px 14px;margin-bottom:16px;display:flex;align-items:center;gap:8px;flex-wrap:wrap;}
+.speed-toolbar-label{font-size:10px;font-weight:700;letter-spacing:.15em;color:#5a6e5a;text-transform:uppercase;white-space:nowrap;}
+.speed-divider{width:1px;height:24px;background:#2a302a;flex-shrink:0;}
+.spd-btn{display:inline-flex;align-items:center;gap:5px;padding:6px 12px;border:1px solid #3a4a3a;background:#1e231e;color:#8a9e8a;font-size:11px;font-weight:700;letter-spacing:.06em;cursor:pointer;border-radius:4px;transition:all .15s;font-family:inherit;white-space:nowrap;}
+.spd-btn:hover{border-color:#c8f040;color:#c8f040;background:#1e2e10;}
+.spd-btn.accent{border-color:#5a7a3a;background:#1e3010;color:#c8f040;}
+.spd-btn.accent:hover{background:#2a4010;border-color:#c8f040;}
+
+/* ── Tire Grid ── */
+.tire-grid{display:grid;grid-template-columns:1fr 1fr;gap:14px;}
+@media(max-width:680px){.tire-grid{grid-template-columns:1fr;}}
+
+/* ── Card ── */
+.tire-card{background:#1e231e;border:1px solid #2a302a;border-radius:8px;padding:16px;position:relative;transition:border-color .25s,opacity .25s;}
+.tire-card.card-complete{border-color:#3a5a3a;}
+.tire-card.card-incomplete{border-color:#5a2020;}
+.tire-card.card-locked{opacity:.4;pointer-events:none;}
+.tire-card.card-locked::after{content:'Complete previous tire first ↑';position:absolute;inset:0;background:rgba(10,14,10,.75);display:flex;align-items:center;justify-content:center;font-size:13px;font-weight:700;color:#e05050;letter-spacing:.06em;border-radius:8px;pointer-events:none;}
+
+.card-header{display:flex;align-items:center;gap:8px;margin-bottom:12px;}
+.card-header .icon{font-size:14px;}
+.card-header .pos{font-size:12px;font-weight:700;letter-spacing:.2em;color:#c8f040;text-transform:uppercase;flex:1;}
+.card-status-badge{font-size:10px;font-weight:700;padding:2px 8px;border-radius:10px;letter-spacing:.06em;}
+.card-status-badge.complete{background:#1a3a1a;color:#6ec86e;border:1px solid #3a5a3a;}
+.card-status-badge.incomplete{background:#3a1010;color:#e05050;border:1px solid #5a2020;}
+.card-status-badge.in-progress{background:#3a3010;color:#e8b840;border:1px solid #6a4a14;}
+
+/* ── SAME-AS BANNER (appears at top of card 2,3,4) ── */
+.same-as-bar{display:none;margin-bottom:12px;gap:6px;flex-wrap:wrap;}
+.same-as-bar.show{display:flex;}
+.same-btn{flex:1;min-width:90px;padding:7px 10px;border-radius:4px;border:1px solid #3a5a3a;background:#1a2e14;color:#80c080;font-size:11px;font-weight:700;letter-spacing:.06em;cursor:pointer;text-align:center;transition:all .15s;font-family:inherit;}
+.same-btn:hover{background:#2a4a1a;border-color:#c8f040;color:#c8f040;}
+.same-btn.wide{flex:2;}
+
+/* ── Fields ── */
+.field-row{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:12px;}
+.field-group label{display:block;font-size:10px;font-weight:600;letter-spacing:.12em;color:#5a6e5a;text-transform:uppercase;margin-bottom:4px;}
+.field-input{width:100%;background:#141814;border:1px solid #2e342e;color:#d4ddd4;font-size:14px;padding:8px 10px;outline:none;border-radius:4px;font-family:inherit;transition:border-color .2s,background .2s,color .2s;}
+.field-input:focus{border-color:#5a7a3a;}
+.field-input::placeholder{color:#3a4a3a;}
+.field-input.f-valid{border-color:#3a5a3a;background:#1a2a1a;color:#6ec86e;}
+.field-input.f-invalid{border-color:#6a2020!important;background:#220d0d!important;color:#e05050!important;}
+.field-input.f-warn{border-color:#6a4a14;background:#221a08;color:#e8b840;}
+.field-hint{font-size:10px;margin-top:3px;padding:2px 5px;border-radius:3px;display:none;font-family:monospace;line-height:1.4;}
+.field-hint.show{display:block;}
+.field-hint.amber{color:#e8b840;}
+.field-hint.red{color:#e05050;}
+.field-hint.green{color:#6ec86e;}
+.field-group.field-missing label{color:#e05050;}
+.field-group.field-missing .field-input{border-color:#5a2020!important;background:#1e0d0d!important;}
+.field-group.field-missing .field-input::placeholder{color:#7a3030;}
+
+/* ── Tread ── */
+.tread-label{font-size:10px;font-weight:600;letter-spacing:.12em;color:#5a6e5a;text-transform:uppercase;margin-bottom:8px;}
+.tread-blocks{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:4px;}
+.tread-block{height:40px;border-radius:4px;display:flex;align-items:center;justify-content:center;border:1px solid transparent;transition:background .25s,border-color .25s;}
+.tread-block span{font-size:9px;font-weight:700;letter-spacing:.08em;writing-mode:vertical-rl;text-orientation:mixed;transform:rotate(180deg);}
+.tread-block.green{background:#2a4a2a;border-color:#4a6a3a;}.tread-block.green span{color:#80c080;}
+.tread-block.amber{background:#4a3a10;border-color:#7a5a1a;}.tread-block.amber span{color:#e8b840;}
+.tread-block.red{background:#4a1a1a;border-color:#7a2a2a;}.tread-block.red span{color:#e05050;}
+.tread-block.empty{background:#242824;border-color:#2e342e;}.tread-block.empty span{color:#4a5a4a;}
+
+.tread-inputs{display:grid;grid-template-columns:1fr 1fr 1fr;gap:6px;margin-bottom:6px;}
+.tread-col{display:flex;flex-direction:column;align-items:center;gap:3px;}
+.tread-col .col-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;color:#5a6e5a;text-transform:uppercase;}
+.tread-num-box{width:100%;text-align:center;font-size:22px;font-weight:700;padding:8px 4px;border-radius:4px;border:1px solid #2e342e;background:#141814;color:#d4ddd4;outline:none;font-family:inherit;transition:border-color .2s,color .2s,background .2s;-moz-appearance:textfield;}
+.tread-num-box::-webkit-inner-spin-button,.tread-num-box::-webkit-outer-spin-button{-webkit-appearance:none;}
+.tread-num-box:focus{border-color:#5a7a3a;}
+.tread-num-box.green{color:#6ec86e;border-color:#3a5a3a;background:#1a2a1a;}
+.tread-num-box.amber{color:#e8b840;border-color:#6a4a14;background:#221a08;}
+.tread-num-box.red{color:#e05050;border-color:#6a2020;background:#220d0d;}
+.tread-col .unit{font-size:10px;color:#4a5a4a;}
+.tread-col.tread-missing .col-lbl{color:#e05050;}
+.tread-col.tread-missing .tread-num-box{border-color:#5a2020!important;background:#1e0d0d!important;}
+
+/* ── Quick tread presets ── */
+.tread-presets{display:flex;gap:4px;margin-bottom:8px;flex-wrap:wrap;}
+.preset-lbl{font-size:9px;font-weight:700;letter-spacing:.1em;color:#4a5a4a;align-self:center;text-transform:uppercase;margin-right:2px;}
+.preset-btn{padding:3px 8px;border:1px solid #2e342e;background:#141814;color:#5a6e5a;font-size:11px;font-weight:700;cursor:pointer;border-radius:3px;font-family:inherit;transition:all .12s;}
+.preset-btn:hover{border-color:#c8f040;color:#c8f040;background:#1a2010;}
+.preset-btn.p-red{border-color:#4a1a1a;color:#8a4040;}
+.preset-btn.p-red:hover{border-color:#e05050;color:#e05050;background:#220d0d;}
+.preset-btn.p-amber{border-color:#4a3a10;color:#8a6a20;}
+.preset-btn.p-amber:hover{border-color:#e8b840;color:#e8b840;background:#221a08;}
+.preset-btn.p-green{border-color:#2a3a1a;color:#5a7a4a;}
+.preset-btn.p-green:hover{border-color:#6ec86e;color:#6ec86e;background:#1a2a1a;}
+
+/* ── Stepper ── */
+.stepper{display:flex;gap:4px;}
+.step-btn{width:28px;height:22px;background:#242824;border:1px solid #3a423a;color:#8a9e8a;font-size:14px;cursor:pointer;border-radius:3px;display:flex;align-items:center;justify-content:center;transition:background .12s;font-family:inherit;}
+.step-btn:hover{background:#2e362e;border-color:#5a7a3a;color:#c8d8c8;}
+
+/* ── Worst badge ── */
+.worst-row{display:flex;align-items:center;gap:8px;margin:8px 0 12px;}
+.worst-lbl{font-size:10px;font-weight:700;letter-spacing:.1em;color:#5a6e5a;text-transform:uppercase;flex-shrink:0;}
+.worst-badge{flex:1;padding:6px 10px;border-radius:4px;font-size:11px;font-weight:700;letter-spacing:.06em;text-align:center;border:1px solid transparent;transition:all .25s;}
+.worst-badge.empty{color:#4a5a4a;border-color:#2e342e;background:#1a1e1a;}
+.worst-badge.good{color:#6ec86e;border-color:#3a5a3a;background:#1a2a1a;}
+.worst-badge.soon{color:#e8b840;border-color:#6a4a14;background:#221a08;}
+.worst-badge.now{color:#e05050;border-color:#7a2020;background:#220d0d;animation:blink-badge 1s ease-in-out infinite alternate;}
+@keyframes blink-badge{from{background:#220d0d}to{background:#3a1010}}
+
+/* ── Condition CHIPS (replaces dropdown) ── */
+.condition-wrap{margin-bottom:10px;}
+.condition-wrap .cw-label{font-size:10px;font-weight:700;letter-spacing:.12em;color:#5a6e5a;text-transform:uppercase;margin-bottom:6px;}
+.cond-chips{display:flex;gap:5px;flex-wrap:wrap;}
+.cond-chip{padding:5px 9px;border:1px solid #2e342e;background:#141814;color:#6a7e6a;font-size:11px;font-weight:600;cursor:pointer;border-radius:4px;transition:all .12s;font-family:inherit;white-space:nowrap;}
+.cond-chip:hover{border-color:#8a9e8a;color:#c8d8c8;}
+.cond-chip.active-good{border-color:#3a5a3a;background:#1a2a1a;color:#6ec86e;}
+.cond-chip.active-warn{border-color:#6a4a14;background:#221a08;color:#e8b840;}
+.cond-chip.active-crit{border-color:#6a2020;background:#220d0d;color:#e05050;}
+
+.ai-detect{font-size:11px;font-family:monospace;margin:3px 0 8px;padding:4px 8px;border-radius:3px;display:none;line-height:1.5;}
+.ai-detect.show{display:block;}
+.ai-detect.amber{color:#e8b840;background:rgba(232,184,64,.07);border-left:2px solid #e8b840;}
+
+.card-divider{border:none;border-top:1px solid #2a302a;margin:10px 0;}
+.photo-row{display:flex;gap:8px;align-items:center;}
+.photo-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border:1px solid #3a423a;background:#1e231e;color:#8a9e8a;font-size:11px;font-weight:600;cursor:pointer;border-radius:4px;font-family:inherit;}
+.photo-btn:hover{border-color:#5a7a3a;color:#c8d8c8;}
+.upload-btn{display:inline-flex;align-items:center;gap:5px;padding:7px 12px;border:1px solid #7a6a1a;background:#c8a020;color:#141814;font-size:11px;font-weight:700;cursor:pointer;border-radius:4px;font-family:inherit;position:relative;overflow:hidden;}
+.upload-btn:hover{background:#e8b840;}
+.upload-btn input[type=file]{position:absolute;inset:0;opacity:0;cursor:pointer;font-size:0;}
+.photo-preview{max-width:100%;max-height:90px;border-radius:4px;border:1px solid #2e342e;margin-top:6px;}
+
+/* ── Recommendations ── */
+.rec-panel{margin-top:24px;background:#141814;border:1px solid #2a302a;border-radius:8px;overflow:hidden;}
+.rec-header{background:#1e231e;border-bottom:1px solid #2a302a;padding:12px 18px;display:flex;align-items:center;gap:10px;flex-wrap:wrap;}
+.rec-header-icon{font-size:16px;}
+.rec-header-title{font-size:11px;font-weight:700;letter-spacing:.2em;color:#c8f040;text-transform:uppercase;}
+.rec-header-sub{font-size:10px;color:#5a6e5a;font-family:monospace;margin-left:auto;}
+.rec-vehicle{background:#1a1e1a;border-bottom:1px solid #2a302a;padding:8px 18px;font-size:11px;font-family:monospace;color:#8a9e8a;display:none;}
+.rec-vehicle.show{display:block;}
+.rec-vehicle .rv-item{display:inline-block;margin-right:16px;}
+.rec-vehicle .rv-label{color:#5a6e5a;}
+.rec-vehicle .rv-val{color:#c8d8c8;font-weight:700;margin-left:4px;}
+.rec-vehicle .rv-drive{color:#c8f040;font-weight:700;margin-left:4px;}
+.rec-body{padding:18px;}
+.rec-empty{color:#4a5a4a;font-family:monospace;font-size:12px;padding:8px 0;}
+.rec-group{margin-bottom:18px;}
+.rec-group:last-child{margin-bottom:0;}
+.rec-group-title{font-size:10px;font-weight:700;letter-spacing:.18em;color:#5a6e5a;text-transform:uppercase;margin-bottom:8px;padding-bottom:5px;border-bottom:1px solid #2a302a;}
+.rec-item{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border-radius:5px;margin-bottom:6px;border:1px solid transparent;}
+.rec-item:last-child{margin-bottom:0;}
+.rec-item.crit{background:rgba(224,80,80,.07);border-color:#4a1a1a;}
+.rec-item.warn{background:rgba(232,184,64,.07);border-color:#4a3a10;}
+.rec-item.info{background:rgba(200,241,53,.05);border-color:#2a3a18;}
+.rec-item.good{background:rgba(76,175,80,.05);border-color:#1e3020;}
+.rec-bullet{width:7px;height:7px;border-radius:50%;flex-shrink:0;margin-top:6px;}
+.rec-bullet.red{background:#e05050;box-shadow:0 0 5px rgba(224,80,80,.5);}
+.rec-bullet.amber{background:#e8b840;box-shadow:0 0 5px rgba(232,184,64,.4);}
+.rec-bullet.green{background:#6ec86e;}
+.rec-bullet.blue{background:#5090e0;}
+.rec-text{flex:1;}
+.rec-text .rt-main{font-size:13px;font-weight:700;color:#d4ddd4;line-height:1.4;margin-bottom:3px;}
+.rec-text .rt-detail{font-size:11px;color:#8a9e8a;line-height:1.6;}
+.rec-text .rt-why{font-size:10px;color:#6a7e6a;font-family:monospace;margin-top:4px;padding:4px 7px;background:#141814;border-left:2px solid #3a423a;line-height:1.5;}
+.rec-text .rt-qty{font-size:12px;font-weight:700;color:#c8f040;margin-top:5px;}
+.rec-priority{font-size:9px;font-weight:700;letter-spacing:.1em;padding:2px 7px;border-radius:3px;flex-shrink:0;margin-top:2px;}
+.rec-priority.p1{background:#4a1a1a;color:#e05050;}
+.rec-priority.p2{background:#4a3a10;color:#e8b840;}
+.rec-priority.p3{background:#1e2e1e;color:#6ec86e;}
+.rec-summary{background:#1a1e1a;border-top:1px solid #2a302a;padding:12px 18px;display:none;}
+.rec-summary.show{display:block;}
+.rec-summary-title{font-size:10px;font-weight:700;letter-spacing:.15em;color:#5a6e5a;text-transform:uppercase;margin-bottom:8px;}
+.rec-summary-grid{display:grid;grid-template-columns:repeat(auto-fit,minmax(130px,1fr));gap:8px;}
+.rec-sum-tile{background:#141814;border:1px solid #2a302a;border-radius:4px;padding:9px 10px;}
+.rec-sum-tile .rst-label{font-size:9px;color:#5a6e5a;font-family:monospace;letter-spacing:.08em;margin-bottom:3px;text-transform:uppercase;}
+.rec-sum-tile .rst-val{font-size:14px;font-weight:700;color:#c8f040;}
+.rec-sum-tile .rst-sub{font-size:10px;color:#8a9e8a;margin-top:1px;}
+
+/* ── Scan modal ── */
+.scan-modal{display:none;position:fixed;inset:0;background:rgba(0,0,0,.75);z-index:1000;align-items:center;justify-content:center;}
+.scan-modal.show{display:flex;}
+.scan-box{background:#1e231e;border:1px solid #3a423a;border-radius:8px;padding:22px;max-width:400px;width:90%;}
+.scan-box h3{font-size:12px;font-weight:700;letter-spacing:.15em;color:#c8f040;text-transform:uppercase;margin-bottom:10px;}
+.scan-box p{font-size:12px;color:#8a9e8a;margin-bottom:12px;line-height:1.6;}
+.scan-vin-preview{font-family:monospace;font-size:17px;font-weight:700;letter-spacing:.12em;color:#e8b840;text-align:center;padding:10px;border:1px solid #5a4a1a;background:#211e10;border-radius:4px;margin-bottom:10px;min-height:42px;}
+.scan-close{padding:7px 18px;border:1px solid #3a423a;background:transparent;color:#8a9e8a;font-size:12px;cursor:pointer;border-radius:4px;font-family:inherit;}
+.scan-apply{padding:7px 18px;border:none;background:#c8f040;color:#141814;font-size:12px;font-weight:700;cursor:pointer;border-radius:4px;font-family:inherit;margin-left:8px;}
+.scan-apply:disabled{opacity:.4;cursor:not-allowed;background:#5a6e5a;}
+
+/* ── Toast notification ── */
+.toast{position:fixed;bottom:24px;right:24px;background:#1e3010;border:1px solid #5a7a3a;color:#c8f040;font-size:12px;font-weight:700;padding:10px 18px;border-radius:6px;z-index:500;transform:translateY(60px);opacity:0;transition:all .25s;font-family:inherit;letter-spacing:.06em;}
+.toast.show{transform:translateY(0);opacity:1;}
+
+/* ── VIN History ── */
+.vin-history-row{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px;}
+.vin-history-chip{display:inline-flex;align-items:center;gap:6px;padding:4px 10px;background:#141814;border:1px solid #2e342e;border-radius:4px;font-family:monospace;font-size:11px;color:#8a9e8a;cursor:pointer;transition:all .15s;}
+.vin-history-chip:hover{border-color:#5a7a3a;color:#c8f040;background:#1a2010;}
+.vin-history-chip .vh-vin{color:#c8d8c8;font-weight:700;letter-spacing:.06em;}
+.vin-history-chip .vh-info{color:#5a6e5a;font-size:10px;}
+.vin-history-chip .vh-del{color:#4a3030;font-size:12px;margin-left:2px;line-height:1;}
+.vin-history-chip .vh-del:hover{color:#e05050;}
+.vin-history-label{font-size:10px;font-weight:700;letter-spacing:.1em;color:#5a6e5a;text-transform:uppercase;margin-top:10px;margin-bottom:4px;}
+
+/* ── Customer Info ── *//* ── Customer Info ── */
+.customer-section{background:#1e231e;border:1px solid #2a302a;border-radius:6px;padding:14px 16px;margin-bottom:14px;}
+.customer-title{font-size:10px;font-weight:700;letter-spacing:.18em;color:#c8f040;text-transform:uppercase;margin-bottom:10px;}
+.customer-grid{display:grid;grid-template-columns:1fr 1fr 1fr;gap:8px;}
+@media(max-width:600px){.customer-grid{grid-template-columns:1fr 1fr;}}
+.cust-group label{display:block;font-size:10px;font-weight:600;letter-spacing:.12em;color:#5a6e5a;text-transform:uppercase;margin-bottom:4px;}
+.cust-input{width:100%;background:#141814;border:1px solid #2e342e;color:#d4ddd4;font-size:13px;padding:7px 10px;outline:none;border-radius:4px;font-family:inherit;transition:border-color .2s;}
+.cust-input:focus{border-color:#5a7a3a;}
+.cust-input::placeholder{color:#3a4a3a;}
+
+/* ── Print / PDF ── */
+@media print {
+  body{background:#fff!important;color:#000!important;font-size:12px;-webkit-print-color-adjust:exact;print-color-adjust:exact;}
+  .page-header,.speed-toolbar,.progress-row,.dot-guide,.vin-section,.alignment-row,.tire-grid,.toast,.scan-modal,.hdr-btn,.customer-section,.rec-header-sub{display:none!important;}
+  .print-report-header{display:block!important;}
+  .wrap{padding:0!important;max-width:100%!important;}
+  .rec-panel{border:1px solid #ccc!important;background:#fff!important;}
+  .rec-header{background:#f5f5f5!important;border-bottom:1px solid #ddd!important;}
+  .rec-header-title{color:#000!important;}
+  .rec-vehicle{background:#fafafa!important;color:#333!important;border-bottom:1px solid #eee!important;display:block!important;}
+  .rec-vehicle .rv-label{color:#666!important;}
+  .rec-vehicle .rv-val,.rec-vehicle .rv-drive{color:#000!important;}
+  .rec-body{padding:12px!important;}
+  .rec-item{border:1px solid #ddd!important;background:#fff!important;break-inside:avoid;margin-bottom:8px!important;}
+  .rec-item.crit{background:#fff8f8!important;border-color:#ffcccc!important;}
+  .rec-item.warn{background:#fffbf0!important;border-color:#ffe0a0!important;}
+  .rec-item.good{background:#f8fff8!important;border-color:#c0e0c0!important;}
+  .rec-text .rt-main{color:#000!important;font-size:12px!important;}
+  .rec-text .rt-detail{color:#333!important;}
+  .rec-text .rt-why{color:#555!important;background:#f5f5f5!important;border-left:2px solid #aaa!important;}
+  .rec-text .rt-qty{color:#007700!important;}
+  .rec-priority.p1{background:#ffcccc!important;color:#cc0000!important;}
+  .rec-priority.p2{background:#fff0c0!important;color:#996600!important;}
+  .rec-priority.p3{background:#dfffdf!important;color:#005500!important;}
+  .rec-bullet.red{background:#cc0000!important;box-shadow:none!important;}
+  .rec-bullet.amber{background:#996600!important;box-shadow:none!important;}
+  .rec-bullet.green{background:#007700!important;box-shadow:none!important;}
+  .rec-bullet.blue{background:#0055cc!important;}
+  .rec-group-title{color:#333!important;border-color:#ccc!important;}
+  .rec-summary{background:#f5f5f5!important;display:block!important;border-top:1px solid #ccc!important;}
+  .rec-sum-tile{background:#fff!important;border:1px solid #ddd!important;}
+  .rec-sum-tile .rst-label{color:#666!important;}
+  .rec-sum-tile .rst-val{color:#000!important;}
+  .rec-sum-tile .rst-sub{color:#555!important;}
+  .print-customer-bar{display:flex!important;}
+  .print-footer{display:block!important;}
+}
+.print-report-header{display:none;}
+.print-customer-bar{display:none;}
+.print-footer{display:none;}
+</style>
+</head>
+<body>
+
+<!-- STICKY HEADER -->
+<div class="page-header">
+  <span class="icon">&#x1F6DE;</span>
+  <span class="title">Tire Condition Inspection</span>
+  <div class="header-actions">
+    <button class="hdr-btn accent" onclick="copyFrontToRear()">&#x2193; Copy Front→Rear</button>
+    <button class="hdr-btn accent" onclick="fillAllSame()">&#x25A6; All Same</button>
+    <button class="hdr-btn danger" onclick="clearAll()">&#x2715; Clear All</button>
+    <button class="hdr-btn" onclick="printReport()" style="border-color:#5a7a3a;color:#c8f040;">&#x1F5A8; Print Report</button>
+  </div>
+</div>
+
+<div class="wrap">
+
+  <!-- Print Header (hidden on screen, shows on print) -->
+  <div class="print-report-header">
+    <div style="text-align:center;padding:12px 0 8px;border-bottom:2px solid #000;margin-bottom:12px;">
+      <div style="font-size:20px;font-weight:700;letter-spacing:.1em;">TIRE CONDITION INSPECTION REPORT</div>
+      <div id="printDate" style="font-size:12px;color:#555;margin-top:4px;"></div>
+    </div>
+    <div class="print-customer-bar" style="gap:16px 24px;margin-bottom:12px;padding-bottom:10px;border-bottom:1px solid #ccc;font-size:12px;flex-wrap:wrap;line-height:1.8;">
+      Customer: <span id="printCustName">&mdash;</span> &nbsp;&nbsp;
+      Vehicle: <span id="printVehicle">&mdash;</span> &nbsp;&nbsp;
+      Mileage: <span id="printMileage">&mdash;</span> &nbsp;&nbsp;
+      License: <span id="printLicense">&mdash;</span> &nbsp;&nbsp;
+      Advisor: <span id="printAdvisor">&mdash;</span> &nbsp;&nbsp;
+      Technician: <span id="printTech">&mdash;</span> &nbsp;&nbsp;
+      Work Order: <span id="printWO">&mdash;</span> &nbsp;&nbsp;
+      Date: <span id="printDate2">&mdash;</span>
+    </div>
+  </div>
+
+  <!-- Customer Info -->
+  <div class="customer-section">
+    <div class="customer-title">&#x1F464; Customer &amp; Vehicle Info</div>
+    <div class="customer-grid">
+      <div class="cust-group"><label>Customer Name</label><input class="cust-input" id="custName" type="text" placeholder="John Smith" oninput="updatePrintFields()"></div>
+      <div class="cust-group"><label>Vehicle Mileage</label><input class="cust-input" id="custMileage" type="text" placeholder="45,200 mi" oninput="updatePrintFields()"></div>
+      <div class="cust-group"><label>License Plate</label><input class="cust-input" id="custLicense" type="text" placeholder="ABC-1234" oninput="updatePrintFields()"></div>
+      <div class="cust-group"><label>Service Advisor</label><input class="cust-input" id="custAdvisor" type="text" placeholder="Your name" oninput="updatePrintFields()"></div>
+      <div class="cust-group"><label>Work Order #</label><input class="cust-input" id="custWO" type="text" placeholder="WO-10042" oninput="updatePrintFields()"></div>
+      <div class="cust-group"><label>Tire Technician</label><input class="cust-input" id="custTech" type="text" placeholder="Tech name" oninput="updatePrintFields()"></div>
+      <div class="cust-group"><label>Date</label><input class="cust-input" id="custDate" type="date" oninput="updatePrintFields()"></div>
+    </div>
+  </div>
+
+  <!-- DOT Guide collapsible -->
+  <details class="dot-guide">
+    <summary>&#x1F4D6; DOT Date Guide</summary>
+    <div class="dot-guide-body">
+      <span class="lbl">DOT Date Guide:</span> Last 4 digits of DOT code on sidewall. First 2 = week, last 2 = year. Example: <span class="dot-hl">DOT&hellip;2319</span> = week 23 of 2019. Tires over <span class="yr6">6 years old</span> should be inspected; over <span class="yr10">10 years</span> replace regardless of tread.
+    </div>
+  </details>
+
+  <!-- VIN -->
+  <div class="vin-section">
+    <div class="vin-title">&#x1F50D; VIN Lookup &mdash; Auto-Fill Tire Size</div>
+    <div class="vin-row">
+      <div class="vin-input-wrap">
+        <label>Vehicle VIN (17 characters)</label>
+        <input type="text" class="vin-input" id="vinInput" maxlength="17" placeholder="e.g. 1HGBH41JXMN109186" oninput="onVinInput(this.value)">
+      </div>
+      <button class="vin-btn" id="vinLookupBtn" onclick="lookupVin()" disabled>&#x1F50D; Look Up VIN</button>
+      <label class="vin-scan-btn">&#x1F4F7; Scan VIN<input type="file" accept="image/*" capture="environment" onchange="scanVinPhoto(this)"></label>
+    </div>
+    <div style="margin-top:10px;">
+      <div style="font-size:10px;font-weight:700;letter-spacing:.12em;color:#5a6e5a;text-transform:uppercase;margin-bottom:6px;">Drive Type</div>
+      <div class="drive-row" id="driveRow">
+        <label class="drive-opt selected" onclick="setDrive('FWD',this)"><input type="radio" name="drive" value="FWD" checked><span>FWD</span></label>
+        <label class="drive-opt" onclick="setDrive('RWD',this)"><input type="radio" name="drive" value="RWD"><span>RWD</span></label>
+        <label class="drive-opt" onclick="setDrive('AWD',this)"><input type="radio" name="drive" value="AWD"><span>AWD / 4WD</span></label>
+        <label class="drive-opt" onclick="setDrive('LIVE_REAR',this)"><input type="radio" name="drive" value="LIVE_REAR"><span>Live Axle &mdash; Rear</span></label>
+        <label class="drive-opt" onclick="setDrive('LIVE_FRONT',this)"><input type="radio" name="drive" value="LIVE_FRONT"><span>Live Axle &mdash; Front</span></label>
+      </div>
+    </div>
+    <div id="vinHistorySection" style="display:none;">
+      <div class="vin-history-label">&#x1F4BE; Recent VINs</div>
+      <div class="vin-history-row" id="vinHistoryRow"></div>
+    </div>
+    <div class="vin-loading" id="vinLoading">&#x23F3; Querying NHTSA&hellip;</div>
+    <div class="vin-result" id="vinResult"></div>
+  </div>
+
+  <!-- Alignment -->
+  <div class="alignment-row" id="alignRow">
+    <div class="left">
+      <div class="label">Needs Wheel Alignment</div>
+      <div class="sub" id="alignSub">Uneven wear, pulling, or off-center steering</div>
+    </div>
+    <label class="toggle-wrap"><input type="checkbox" id="alignToggle" disabled><span class="toggle-slider"></span></label>
+  </div>
+
+  <!-- Progress -->
+  <div class="progress-row" id="progressRow"></div>
+
+  <!-- Speed toolbar -->
+  <div class="speed-toolbar">
+    <span class="speed-toolbar-label">&#x26A1; Quick Fill</span>
+    <span style="font-size:9px;color:#3a4a3a;font-family:monospace;letter-spacing:.05em;" title="Alt+1-4: jump to tire | Alt+C: copy front-rear | Alt+S: all same | Alt+P: print">Alt+1–4 jump &bull; Alt+C copy &bull; Alt+S same &bull; Alt+P print</span>
+    <span class="speed-divider"></span>
+    <button class="spd-btn" onclick="applyGlobalDot()">&#x1F4C5; Same DOT All</button>
+    <button class="spd-btn" onclick="applyGlobalSize()">&#x1F4CF; Same Size All</button>
+    <button class="spd-btn" onclick="applyGlobalTread()">&#x1F4CA; Same Tread All</button>
+    <span class="speed-divider"></span>
+    <span style="font-size:10px;color:#5a6e5a;font-weight:700;letter-spacing:.08em;text-transform:uppercase;">Set All Tread:</span>
+    <button class="spd-btn" onclick="setAllTread(2)"><span style="color:#e05050;">2</span>/32</button>
+    <button class="spd-btn" onclick="setAllTread(4)"><span style="color:#e8b840;">4</span>/32</button>
+    <button class="spd-btn" onclick="setAllTread(6)"><span style="color:#8acc8a;">6</span>/32</button>
+    <button class="spd-btn" onclick="setAllTread(8)"><span style="color:#6ec86e;">8</span>/32</button>
+    <button class="spd-btn" onclick="setAllTread(10)"><span style="color:#6ec86e;">10</span>/32</button>
+  </div>
+
+  <!-- Tire Grid -->
+  <div class="tire-grid">
+    <div class="tire-card" id="card-FL"></div>
+    <div class="tire-card" id="card-FR"></div>
+    <div class="tire-card" id="card-RL"></div>
+    <div class="tire-card" id="card-RR"></div>
+  </div>
+
+  <!-- Recommendations -->
+  <div class="rec-panel" id="recPanel">
+    <div class="rec-header">
+      <span class="rec-header-icon">&#x1F4CB;</span>
+      <span class="rec-header-title">Recommendations &amp; Action Items</span>
+      <span class="rec-header-sub" id="recTimestamp"></span>
+    </div>
+    <div class="rec-vehicle" id="recVehicle"></div>
+    <div class="rec-body" id="recBody"><div class="rec-empty">Enter tire data above to generate recommendations&hellip;</div></div>
+    <div class="rec-summary" id="recSummary"></div>
+  </div>
+  <!-- Print Footer -->
+  <div class="print-footer" style="margin-top:20px;padding-top:12px;border-top:1px solid #ccc;font-size:11px;color:#666;text-align:center;">
+    This report was generated by the Tire Condition Inspection System. All measurements are in 32nds of an inch. Legal minimum tread depth: 2/32&quot;. Recommended replacement threshold: 4/32&quot;.
+  </div>
+</div>
+
+<!-- Toast -->
+<div class="toast" id="toast"></div>
+
+<!-- VIN Scan Modal -->
+<div class="scan-modal" id="scanModal">
+  <div class="scan-box">
+    <h3>&#x1F4F7; VIN from Photo</h3>
+    <p>Take a photo or upload an image of the VIN plate. AI extracts the VIN automatically.</p>
+    <div class="scan-vin-preview" id="scanVinPreview">Scanning&hellip;</div>
+    <div style="display:flex;gap:8px;justify-content:flex-end;margin-top:8px;">
+      <button class="scan-close" onclick="closeScanModal()">Cancel</button>
+      <button class="scan-apply" id="scanApplyBtn" onclick="applyScanVin()" disabled>Apply VIN</button>
+    </div>
+  </div>
+</div>
+
+<script>
+var TIRES=[{id:'FL',label:'FRONT LEFT',axle:'front',side:'left'},{id:'FR',label:'FRONT RIGHT',axle:'front',side:'right'},{id:'RL',label:'REAR LEFT',axle:'rear',side:'left'},{id:'RR',label:'REAR RIGHT',axle:'rear',side:'right'}];
+var COND_LIST=['Good','Fair','Cracking','Bulge / Damage','Uneven Wear','Flat / Low Pressure','Sidewall Damage','Not Repairable','Repairable - Nail/Screw','Dry Rot'];
+var COND_CLASS={'Good':'active-good','Fair':'active-warn','Cracking':'active-warn','Bulge / Damage':'active-crit','Uneven Wear':'active-warn','Flat / Low Pressure':'active-crit','Sidewall Damage':'active-crit','Not Repairable':'active-crit','Repairable - Nail/Screw':'active-warn','Dry Rot':'active-crit'};
+
+var S={};
+TIRES.forEach(function(t){S[t.id]={dot:'',size:'',outer:'',middle:'',inner:'',condition:'Good',photo:null};});
+var driveType='FWD',vinData=null,vinInfo={year:'',make:'',model:''},scannedVin='';
+var CURRENT_YEAR=2026;
+var VALID_WIDTHS=[125,135,145,155,165,175,185,195,205,215,225,235,245,255,265,275,285,295,305,315,325,335,345,355];
+var VALID_ASPECTS=[25,30,35,40,45,50,55,60,65,70,75,80,85];
+var VALID_RIMS=[13,14,15,16,17,18,19,20,21,22,23,24,26,28];
+var ORDER=['FL','FR','RL','RR'];
+
+// -- Toast ------------------------------------------------
+var toastTimer;
+function showToast(msg){
+  var t=document.getElementById('toast'); t.textContent=msg; t.className='toast show';
+  clearTimeout(toastTimer); toastTimer=setTimeout(function(){t.className='toast';},2000);
+}
+
+// -- Validation -------------------------------------------
+function validateTireSize(size){
+  if(!size||size.trim()==='') return{ok:null,msg:''};
+  var s=size.trim().toUpperCase();
+  var m=s.match(/^[A-Z]{0,3}(\d{3})\/(\d{2,3})[RBD\-](\d{2})([A-Z]?)$/);
+  if(!m) return{ok:false,msg:'Invalid format. Use: 235/55R19'};
+  var w=parseInt(m[1]),a=parseInt(m[2]),r=parseInt(m[3]);
+  if(VALID_WIDTHS.indexOf(w)===-1) return{ok:false,msg:'Width '+w+'mm is not a standard tire width'};
+  if(VALID_ASPECTS.indexOf(a)===-1) return{ok:false,msg:'Aspect ratio '+a+' is not standard'};
+  if(VALID_RIMS.indexOf(r)===-1) return{ok:false,msg:'Rim size '+r+'" is not a standard size'};
+  return{ok:true,msg:w+'/'+a+'R'+r+' \u2014 valid'};
+}
+function validateDOT(dot){
+  if(!dot||dot.trim()==='') return{ok:null,msg:''};
+  var s=dot.replace(/\D/g,''); if(s.length<4) return{ok:null,msg:''};
+  s=s.slice(-4); var w=parseInt(s.slice(0,2)),y=parseInt('20'+s.slice(2,4));
+  if(w<1||w>53) return{ok:false,msg:'Week '+w+' invalid (01\u201353)'};
+  if(y>CURRENT_YEAR) return{ok:false,msg:'Year 20'+s.slice(2,4)+' is in the future \u2014 check DOT code'};
+  if(y<2000) return{ok:false,msg:'Year appears pre-2000'};
+  var age=dotAgeYears(dot);
+  if(age>10) return{ok:'replace',age:age,week:w,year:y,msg:'Week '+w+', '+y+' \u2014 '+Math.round(age)+' yrs \u2014 REPLACE'};
+  if(age>6)  return{ok:'warn',age:age,week:w,year:y,msg:'Week '+w+', '+y+' \u2014 '+Math.round(age)+' yrs \u2014 Inspect'};
+  return{ok:true,age:age,week:w,year:y,msg:'Week '+w+', '+y+' \u2014 '+age.toFixed(1)+' yrs \u2014 OK'};
+}
+function dotAgeYears(raw){
+  if(!raw) return null;
+  var s=raw.replace(/\D/g,'').slice(-4); if(s.length<4) return null;
+  var w=parseInt(s.slice(0,2)),y=parseInt('20'+s.slice(2,4));
+  if(w<1||w>53||y<2000||y>CURRENT_YEAR) return null;
+  var now=new Date(CURRENT_YEAR,2,22),d=new Date(y,0,1); d.setDate(d.getDate()+(w-1)*7);
+  return(now-d)/(365.25*24*3600*1000);
+}
+function colorClass(v){var n=parseInt(v);if(isNaN(n)||v==='')return'empty';if(n<=2)return'red';if(n<=4)return'amber';return'green';}
+function worstOf(id){var s=S[id],vals=[s.outer,s.middle,s.inner].map(function(v){return parseInt(v);}).filter(function(v){return!isNaN(v);});return vals.length?Math.min.apply(null,vals):null;}
+function unevenWear(id){
+  var s=S[id],o=parseInt(s.outer),m=parseInt(s.middle),i=parseInt(s.inner);
+  var valid=[o,m,i].filter(function(v){return!isNaN(v);}); if(valid.length<2)return{uneven:false,diff:0,note:''};
+  var diff=Math.max.apply(null,valid)-Math.min.apply(null,valid); if(diff<2)return{uneven:false,diff:diff,note:''};
+  var note='uneven tread distribution';
+  if(!isNaN(o)&&!isNaN(i)){if(o<i-2)note='outer-edge wear \u2014 camber/alignment issue';else if(i<o-2)note='inner-edge wear \u2014 camber/alignment issue';else if(!isNaN(m)&&m<o-2&&m<i-2)note='center wear \u2014 possible over-inflation';else if(!isNaN(m)&&m>o+2&&m>i+2)note='shoulder wear \u2014 possible under-inflation';}
+  return{uneven:true,diff:diff,note:note};
+}
+
+// -- Card state helpers -----------------------------------
+function isCardComplete(id){
+  var s=S[id],dV=validateDOT(s.dot),sV=validateTireSize(s.size);
+  return !!(s.dot&&s.dot.length===4&&dV.ok!==false&&dV.ok!==null)&&!!(s.size&&s.size.trim()!==''&&sV.ok===true)&&s.outer!==''&&!isNaN(parseInt(s.outer))&&s.middle!==''&&!isNaN(parseInt(s.middle))&&s.inner!==''&&!isNaN(parseInt(s.inner));
+}
+function isCardStarted(id){var s=S[id];return!!(s.dot||s.size||s.outer||s.middle||s.inner);}
+function getMissingFields(id){
+  var s=S[id],missing=[],dV=validateDOT(s.dot),sV=validateTireSize(s.size);
+  if(!s.dot||s.dot.length<4||dV.ok===false)missing.push('dot');
+  if(!s.size||s.size.trim()===''||sV.ok!==true)missing.push('size');
+  if(s.outer===''||isNaN(parseInt(s.outer)))missing.push('outer');
+  if(s.middle===''||isNaN(parseInt(s.middle)))missing.push('middle');
+  if(s.inner===''||isNaN(parseInt(s.inner)))missing.push('inner');
+  return missing;
+}
+
+// -- Speed helpers ----------------------------------------
+// "Same as [prev]" for individual fields or all
+function sameDot(id){
+  var idx=ORDER.indexOf(id); if(idx<1)return;
+  var prev=S[ORDER[idx-1]]; S[id].dot=prev.dot;
+  var el=document.getElementById('dot-'+id); if(el)el.value=prev.dot;
+  refreshDotWarning(id); updateCardStatus(id); buildRecommendations();
+  showToast('DOT copied from '+TIRES[idx-1].label);
+}
+function sameSize(id){
+  var idx=ORDER.indexOf(id); if(idx<1)return;
+  var prev=S[ORDER[idx-1]]; S[id].size=prev.size;
+  var el=document.getElementById('size-'+id); if(el)el.value=prev.size;
+  refreshSizeValidation(id); updateCardStatus(id); buildRecommendations();
+  showToast('Size copied from '+TIRES[idx-1].label);
+}
+function sameTread(id){
+  var idx=ORDER.indexOf(id); if(idx<1)return;
+  var prev=S[ORDER[idx-1]];
+  S[id].outer=prev.outer; S[id].middle=prev.middle; S[id].inner=prev.inner;
+  ['outer','middle','inner'].forEach(function(k){var el=document.getElementById('tread-'+id+'-'+k);if(el)el.value=S[id][k];});
+  refreshTreadDisplay(id); checkAlignment(); buildRecommendations();
+  showToast('Tread copied from '+TIRES[idx-1].label);
+}
+function sameAll(id){
+  var idx=ORDER.indexOf(id); if(idx<1)return;
+  var prev=S[ORDER[idx-1]];
+  S[id].dot=prev.dot; S[id].size=prev.size; S[id].outer=prev.outer; S[id].middle=prev.middle; S[id].inner=prev.inner;
+  var de=document.getElementById('dot-'+id); if(de)de.value=S[id].dot;
+  var se=document.getElementById('size-'+id); if(se)se.value=S[id].size;
+  ['outer','middle','inner'].forEach(function(k){var el=document.getElementById('tread-'+id+'-'+k);if(el)el.value=S[id][k];});
+  refreshDotWarning(id); refreshSizeValidation(id); refreshTreadDisplay(id); checkAlignment(); updateCardStatus(id); buildRecommendations();
+  showToast('All fields copied from '+TIRES[idx-1].label);
+}
+
+// Global speed buttons
+function applyGlobalDot(){
+  var src=S['FL'].dot; if(!src)return showToast('Fill Front Left DOT first');
+  ORDER.forEach(function(id){S[id].dot=src;var el=document.getElementById('dot-'+id);if(el)el.value=src;refreshDotWarning(id);updateCardStatus(id);});
+  buildRecommendations(); showToast('DOT date applied to all 4 tires');
+}
+function applyGlobalSize(){
+  var src=S['FL'].size; if(!src)return showToast('Fill Front Left tire size first');
+  ORDER.forEach(function(id){S[id].size=src;var el=document.getElementById('size-'+id);if(el)el.value=src;refreshSizeValidation(id);updateCardStatus(id);});
+  buildRecommendations(); showToast('Tire size applied to all 4 tires');
+}
+function applyGlobalTread(){
+  var s=S['FL']; if(!s.outer&&!s.middle&&!s.inner)return showToast('Fill Front Left tread first');
+  ORDER.forEach(function(id){S[id].outer=s.outer;S[id].middle=s.middle;S[id].inner=s.inner;['outer','middle','inner'].forEach(function(k){var el=document.getElementById('tread-'+id+'-'+k);if(el)el.value=S[id][k];});refreshTreadDisplay(id);});
+  checkAlignment(); buildRecommendations(); showToast('Tread depths applied to all 4 tires');
+}
+function setAllTread(val){
+  ORDER.forEach(function(id){S[id].outer=String(val);S[id].middle=String(val);S[id].inner=String(val);['outer','middle','inner'].forEach(function(k){var el=document.getElementById('tread-'+id+'-'+k);if(el)el.value=val;});refreshTreadDisplay(id);updateCardStatus(id);});
+  checkAlignment(); buildRecommendations(); showToast('All tread set to '+val+'/32"');
+}
+function copyFrontToRear(){
+  var fl=S['FL'],fr=S['FR'];
+  ['RL','RR'].forEach(function(id,i){
+    var src=i===0?fl:fr; S[id].dot=src.dot;S[id].size=src.size;S[id].outer=src.outer;S[id].middle=src.middle;S[id].inner=src.inner;
+    var de=document.getElementById('dot-'+id);if(de)de.value=S[id].dot;
+    var se=document.getElementById('size-'+id);if(se)se.value=S[id].size;
+    ['outer','middle','inner'].forEach(function(k){var el=document.getElementById('tread-'+id+'-'+k);if(el)el.value=S[id][k];});
+    refreshDotWarning(id);refreshSizeValidation(id);refreshTreadDisplay(id);updateCardStatus(id);
+  });
+  checkAlignment(); buildRecommendations(); showToast('Front data copied to rear tires');
+}
+function fillAllSame(){
+  var fl=S['FL'];
+  if(!isCardComplete('FL')){showToast('Complete Front Left first');return;}
+  ORDER.forEach(function(id){
+    S[id].dot=fl.dot;S[id].size=fl.size;S[id].outer=fl.outer;S[id].middle=fl.middle;S[id].inner=fl.inner;
+    var de=document.getElementById('dot-'+id);if(de)de.value=S[id].dot;
+    var se=document.getElementById('size-'+id);if(se)se.value=S[id].size;
+    ['outer','middle','inner'].forEach(function(k){var el=document.getElementById('tread-'+id+'-'+k);if(el)el.value=S[id][k];});
+    refreshDotWarning(id);refreshSizeValidation(id);refreshTreadDisplay(id);updateCardStatus(id);
+  });
+  checkAlignment(); buildRecommendations(); showToast('✅ All 4 tires filled from Front Left');
+}
+function clearAll(){
+  if(!confirm('Clear all tire data?'))return;
+  TIRES.forEach(function(t){S[t.id]={dot:'',size:'',outer:'',middle:'',inner:'',condition:'Good',photo:null};renderCard(t.id);});
+  checkAlignment(); buildRecommendations(); showToast('All data cleared');
+}
+
+// -- VIN --------------------------------------------------
+function onVinInput(val){
+  var btn=document.getElementById('vinLookupBtn'),inp=document.getElementById('vinInput');
+  var clean=val.replace(/[^A-HJ-NPR-Z0-9]/gi,'').toUpperCase(); inp.value=clean; btn.disabled=(clean.length!==17);
+}
+function lookupVin(){
+  var vin=document.getElementById('vinInput').value.trim().toUpperCase(); if(vin.length!==17)return;
+  var loading=document.getElementById('vinLoading'),result=document.getElementById('vinResult'),btn=document.getElementById('vinLookupBtn');
+  loading.className='vin-loading show'; result.innerHTML=''; btn.disabled=true;
+  fetch('https://vpic.nhtsa.dot.gov/api/vehicles/decodevin/'+vin+'?format=json')
+  .then(function(r){return r.json();})
+  .then(function(data){
+    loading.className='vin-loading'; btn.disabled=false;
+    var res=data.Results||[];
+    var get=function(n){for(var i=0;i<res.length;i++){if(res[i].Variable===n&&res[i].Value&&res[i].Value!=='null'&&res[i].Value!=='0')return res[i].Value;}return null;};
+    var make=get('Make'),model=get('Model'),year=get('Model Year'),drive=get('Drive Type'),tireF=get('Front Tire'),tireR=get('Rear Tire'),err=get('Error Code');
+    if(err&&err!=='0'&&err!=='1'&&!make){result.innerHTML='<span class="vr-err">\u26A0 VIN not found.</span>';document.getElementById('vinInput').className='vin-input invalid';return;}
+    document.getElementById('vinInput').className='vin-input valid';
+    vinInfo={year:year||'',make:make||'',model:model||''};
+    var html='';
+    if(year||make||model){html+='<div>';if(year)html+='<span class="vr-label">YEAR</span><span class="vr-val">'+year+'</span>\u00a0\u00a0';if(make)html+='<span class="vr-label">MAKE</span><span class="vr-val">'+make+'</span>\u00a0\u00a0';if(model)html+='<span class="vr-label">MODEL</span><span class="vr-val">'+model+'</span>';html+='</div>';}
+    if(tireF){
+      html+='<div><span class="vr-label">OEM TIRE</span> <span class="vr-tire">'+tireF+'</span>';
+      if(tireR&&tireR!==tireF)html+='\u00a0\u00a0<span class="vr-label">REAR</span> <span class="vr-tire">'+tireR+'</span>';
+      html+='\u00a0\u00a0<span style="color:#5a6e5a;font-size:10px;">\u2192 auto-applied</span></div>';
+      TIRES.forEach(function(t){var sz=(t.axle==='rear'&&tireR&&tireR!==tireF)?tireR:tireF;S[t.id].size=sz;var el=document.getElementById('size-'+t.id);if(el){el.value=sz;refreshSizeValidation(t.id);}});
+    }else{html+='<div><span style="color:#e8b840;">Tire size not in NHTSA data \u2014 enter manually</span></div>';}
+    if(drive){var dlu=drive.toUpperCase(),dt='FWD';if(dlu.indexOf('AWD')>-1||dlu.indexOf('4WD')>-1||dlu.indexOf('ALL')>-1)dt='AWD';else if(dlu.indexOf('RWD')>-1||dlu.indexOf('REAR')>-1)dt='RWD';setDriveById(dt);html+='<div><span class="vr-label">DRIVE</span><span class="vr-drive">\u00a0'+dt+'</span></div>';}
+    result.innerHTML=html; updateCardLockStates(); buildRecommendations(); updatePrintFields(); saveVinToHistory(vin,vinInfo); showToast('VIN decoded: '+(year||'')+' '+(make||''));
+  })
+  .catch(function(){document.getElementById('vinLoading').className='vin-loading';document.getElementById('vinLookupBtn').disabled=false;document.getElementById('vinResult').innerHTML='<span class="vr-err">\u26A0 Network error.</span>';});
+}
+function scanVinPhoto(input){
+  var file=input.files[0];if(!file)return;
+  var modal=document.getElementById('scanModal'),preview=document.getElementById('scanVinPreview'),applyBtn=document.getElementById('scanApplyBtn');
+  modal.className='scan-modal show';preview.textContent='Reading image\u2026';preview.style.color='#e8b840';applyBtn.disabled=true;scannedVin='';
+  var reader=new FileReader();
+  reader.onload=function(e){
+    var b64=e.target.result.split(',')[1],mt=file.type||'image/jpeg';
+    fetch('https://api.anthropic.com/v1/messages',{method:'POST',headers:{'Content-Type':'application/json'},body:JSON.stringify({model:'claude-sonnet-4-20250514',max_tokens:100,messages:[{role:'user',content:[{type:'image',source:{type:'base64',media_type:mt,data:b64}},{type:'text',text:'Extract the VIN from this image. Return ONLY the 17-character VIN using A-H,J-N,P-Z,0-9. If not found return NOT_FOUND'}]}]})})
+    .then(function(r){return r.json();})
+    .then(function(data){var text='';if(data.content&&data.content[0]&&data.content[0].text)text=data.content[0].text.trim().toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g,'');if(text==='NOTFOUND'||text.length!==17){preview.textContent='Could not detect VIN. Try a clearer photo.';preview.style.color='#e05050';}else{scannedVin=text;preview.textContent=text;applyBtn.disabled=false;}})
+    .catch(function(){preview.textContent='Error reading image.';preview.style.color='#e05050';});
+  };
+  reader.readAsDataURL(file);input.value='';
+}
+function applyScanVin(){if(!scannedVin||scannedVin.length!==17)return;document.getElementById('vinInput').value=scannedVin;onVinInput(scannedVin);closeScanModal();lookupVin();}
+function closeScanModal(){document.getElementById('scanModal').className='scan-modal';}
+function setDrive(val,el){driveType=val;document.querySelectorAll('.drive-opt').forEach(function(o){o.classList.remove('selected');});if(el)el.classList.add('selected');buildRecommendations();}
+function setDriveById(val){driveType=val;document.querySelectorAll('.drive-opt').forEach(function(o){o.classList.remove('selected');var i=o.querySelector('input');if(i&&i.value===val)o.classList.add('selected');});}
+
+// -- Alignment --------------------------------------------
+function checkAlignment(){
+  var reasons=[];
+  TIRES.forEach(function(t){var uw=unevenWear(t.id);if(uw.uneven)reasons.push(t.label+': '+uw.note+' ('+uw.diff+'/32\u201d)');if(S[t.id].condition==='Uneven Wear')reasons.push(t.label+': Uneven Wear');});
+  var flW=worstOf('FL'),frW=worstOf('FR'),rlW=worstOf('RL'),rrW=worstOf('RR');
+  if(flW!==null&&frW!==null&&Math.abs(flW-frW)>=2)reasons.push('Front axle imbalance: FL '+flW+' vs FR '+frW+'/32\u201d');
+  if(rlW!==null&&rrW!==null&&Math.abs(rlW-rrW)>=2)reasons.push('Rear axle imbalance: RL '+rlW+' vs RR '+rrW+'/32\u201d');
+  var tog=document.getElementById('alignToggle'),sub=document.getElementById('alignSub'),row=document.getElementById('alignRow');
+  if(reasons.length){tog.checked=true;row.classList.add('active');sub.textContent='\u26A0 AUTO-DETECTED: '+reasons[0]+(reasons.length>1?' (+'+(reasons.length-1)+' more)':'');}
+  else{tog.checked=false;row.classList.remove('active');sub.textContent='Uneven wear, pulling, or off-center steering';}
+}
+
+// -- Refresh helpers --------------------------------------
+function refreshTreadDisplay(id){
+  var s=S[id];
+  ['outer','middle','inner'].forEach(function(k){var cls=colorClass(s[k]);var b=document.getElementById('block-'+id+'-'+k);if(b)b.className='tread-block '+cls;var x=document.getElementById('tread-'+id+'-'+k);if(x)x.className='tread-num-box '+cls;});
+  var w=worstOf(id),badge=document.getElementById('worst-'+id);
+  if(badge){if(w===null){badge.className='worst-badge empty';badge.textContent='Enter tread depths above';}else if(w<=2){badge.className='worst-badge now';badge.textContent=w+'/32\u201d \u2014 REPLACE NOW \u2014 Below Legal Limit';}else if(w<=4){badge.className='worst-badge soon';badge.textContent=w+'/32\u201d \u2014 Replace Soon \u2014 Below Recommended';}else{badge.className='worst-badge good';badge.textContent=w+'/32\u201d \u2014 OK';}}
+  var ai=document.getElementById('ai-'+id);
+  if(ai){var uw=unevenWear(id);if(uw.uneven){ai.className='ai-detect show amber';ai.textContent='\u21AF Auto-detected: '+uw.note+' \u2014 alignment check recommended';}else if(s.condition==='Uneven Wear'){ai.className='ai-detect show amber';ai.textContent='\u21AF Condition \u201cUneven Wear\u201d \u2014 alignment recommended';}else{ai.className='ai-detect';ai.textContent='';}}
+  updateCardStatus(id);
+}
+function refreshDotWarning(id){
+  var s=S[id],warn=document.getElementById('dotwarn-'+id),inp=document.getElementById('dot-'+id);
+  if(!warn||!inp)return;
+  if(!s.dot||s.dot.length<4){warn.className='field-hint';warn.textContent='';inp.className='field-input';return;}
+  var v=validateDOT(s.dot);
+  if(v.ok===false){warn.className='field-hint show red';warn.textContent='\u26A0 '+v.msg;inp.className='field-input f-invalid';}
+  else if(v.ok==='replace'){warn.className='field-hint show red';warn.textContent='\u25B3 '+v.msg;inp.className='field-input f-invalid';}
+  else if(v.ok==='warn'){warn.className='field-hint show amber';warn.textContent='\u25B3 '+v.msg;inp.className='field-input f-warn';}
+  else{warn.className='field-hint show green';warn.textContent='\u2713 '+v.msg;inp.className='field-input f-valid';}
+}
+function refreshSizeValidation(id){
+  var s=S[id],hint=document.getElementById('sizehint-'+id),inp=document.getElementById('size-'+id);
+  if(!hint||!inp)return;
+  if(!s.size||s.size.trim()===''){hint.className='field-hint';hint.textContent='';inp.className='field-input';return;}
+  var v=validateTireSize(s.size);
+  if(v.ok===false){hint.className='field-hint show red';hint.textContent='\u26A0 '+v.msg;inp.className='field-input f-invalid';}
+  else if(v.ok===true){hint.className='field-hint show green';hint.textContent='\u2713 '+v.msg;inp.className='field-input f-valid';}
+  else{hint.className='field-hint';hint.textContent='';inp.className='field-input';}
+}
+function updateCardStatus(id){
+  var badge=document.getElementById('badge-'+id);if(!badge)return;
+  var complete=isCardComplete(id),started=isCardStarted(id),missing=getMissingFields(id);
+  if(complete){badge.className='card-status-badge complete';badge.textContent='\u2705 Complete';}
+  else if(started){badge.className='card-status-badge incomplete';badge.textContent='\u26A0 '+missing.length+(missing.length===1?' field':' fields')+' missing';}
+  else{badge.className='card-status-badge in-progress';badge.textContent='Fill in order';}
+  if(started){
+    var dw=document.getElementById('dotwrap-'+id),sw=document.getElementById('sizewrap-'+id);
+    if(dw)dw.className=missing.indexOf('dot')>-1?'field-group field-missing':'field-group';
+    if(sw)sw.className=missing.indexOf('size')>-1?'field-group field-missing':'field-group';
+    ['outer','middle','inner'].forEach(function(k){var col=document.getElementById('col-'+id+'-'+k);if(col)col.className=missing.indexOf(k)>-1?'tread-col tread-missing':'tread-col';});
+  }
+  updateCardLockStates();
+}
+function updateCardLockStates(){
+  for(var i=0;i<ORDER.length;i++){
+    var id=ORDER[i],card=document.getElementById('card-'+id);if(!card)continue;
+    var prevOk=(i===0)||isCardComplete(ORDER[i-1]);
+    var thisOk=isCardComplete(id),started=isCardStarted(id);
+    card.classList.remove('card-locked','card-complete','card-incomplete');
+    if(!prevOk&&i>0){card.classList.add('card-locked');}
+    else if(thisOk){card.classList.add('card-complete');}
+    else if(started){card.classList.add('card-incomplete');}
+  }
+  updateProgressSteps();
+}
+function updateProgressSteps(){
+  var row=document.getElementById('progressRow');if(!row)return;
+  var labels=['Front Left','Front Right','Rear Left','Rear Right'];
+  var html='';
+  for(var i=0;i<ORDER.length;i++){
+    var id=ORDER[i],complete=isCardComplete(id),started=isCardStarted(id),prevOk=(i===0)||isCardComplete(ORDER[i-1]);
+    var cls,icon;
+    if(complete){cls='ps-done';icon='\u2705';}
+    else if(!prevOk){cls='ps-waiting';icon='\u23F3';}
+    else if(started){cls='ps-incomplete';icon='\u26A0';}
+    else{cls='ps-active';icon='\u25CB';}
+    html+='<div class="progress-step '+cls+'" onclick="scrollToCard(\''+id+'\')">'
+      +'<div class="progress-step-inner"><div class="progress-step-check">'+icon+'</div>'
+      +'<div class="progress-step-name">'+labels[i]+'</div></div></div>';
+  }
+  row.innerHTML=html;
+}
+function scrollToCard(id){
+  var el=document.getElementById('card-'+id);
+  if(el)el.scrollIntoView({behavior:'smooth',block:'center'});
+}
+
+// -- Auto-advance after completing a card -----------------
+var lastCompleteState={FL:false,FR:false,RL:false,RR:false};
+function checkAutoAdvance(id){
+  var nowComplete=isCardComplete(id);
+  if(nowComplete&&!lastCompleteState[id]){
+    lastCompleteState[id]=true;
+    var idx=ORDER.indexOf(id);
+    if(idx<ORDER.length-1){
+      setTimeout(function(){
+        var nextId=ORDER[idx+1];
+        var nextCard=document.getElementById('card-'+nextId);
+        if(nextCard){nextCard.scrollIntoView({behavior:'smooth',block:'center'});var firstInput=nextCard.querySelector('input');if(firstInput&&!firstInput.type==='file')setTimeout(function(){firstInput.focus();},400);}
+      },300);
+    }
+  }
+  if(!nowComplete)lastCompleteState[id]=false;
+}
+
+// -- Render Card ------------------------------------------
+function renderCard(id){
+  var t=TIRES.filter(function(x){return x.id===id;})[0];
+  var s=S[id],card=document.getElementById('card-'+id);
+  var idx=ORDER.indexOf(id);
+  var complete=isCardComplete(id),started=isCardStarted(id),missing=getMissingFields(id);
+  var oc=colorClass(s.outer),mc=colorClass(s.middle),ic=colorClass(s.inner);
+  var w=worstOf(id);
+  var wCls='empty',wTxt='Enter tread depths above';
+  if(w!==null){if(w<=2){wCls='now';wTxt=w+'/32\u201d \u2014 REPLACE NOW';}else if(w<=4){wCls='soon';wTxt=w+'/32\u201d \u2014 Replace Soon';}else{wCls='good';wTxt=w+'/32\u201d \u2014 OK';}}
+  var uw=unevenWear(id);
+  var aiShow=(uw.uneven||s.condition==='Uneven Wear')?'show amber':'';
+  var aiTxt=uw.uneven?('\u21AF Auto-detected: '+uw.note):(s.condition==='Uneven Wear'?'\u21AF Condition \u201cUneven Wear\u201d \u2014 alignment recommended':'');
+  var badgeCls,badgeTxt;
+  if(complete){badgeCls='card-status-badge complete';badgeTxt='\u2705 Complete';}
+  else if(started){badgeCls='card-status-badge incomplete';badgeTxt='\u26A0 '+missing.length+(missing.length===1?' field':' fields')+' missing';}
+  else{badgeCls='card-status-badge in-progress';badgeTxt='Fill in order';}
+
+  // Same-as bar (show for cards 2,3,4 if previous is complete)
+  var prevComplete=idx===0?false:isCardComplete(ORDER[idx-1]);
+  var sameBar='';
+  if(idx>0&&prevComplete){
+    var prevLabel=TIRES[idx-1].label;
+    sameBar='<div class="same-as-bar show">'
+      +'<button class="same-btn" onclick="sameDot(\''+id+'\')">📅 Same DOT</button>'
+      +'<button class="same-btn" onclick="sameSize(\''+id+'\')">📏 Same Size</button>'
+      +'<button class="same-btn" onclick="sameTread(\''+id+'\')">📊 Same Tread</button>'
+      +'<button class="same-btn wide" onclick="sameAll(\''+id+'\')">\u25A6 Same as '+prevLabel+'</button>'
+      +'</div>';
+  }
+
+  var dotMiss=started&&missing.indexOf('dot')>-1,sizeMiss=started&&missing.indexOf('size')>-1;
+  var treadCols=['outer','middle','inner'].map(function(k,i){
+    var v=s[k],cls=colorClass(v),lbl=['OUTER','MIDDLE','INNER'][i],tMiss=started&&missing.indexOf(k)>-1;
+    return '<div class="tread-col'+(tMiss?' tread-missing':'')+'" id="col-'+id+'-'+k+'">'
+      +'<span class="col-lbl">'+lbl+'</span>'
+      +'<input type="number" id="tread-'+id+'-'+k+'" class="tread-num-box '+cls+'" min="0" max="20" value="'+v+'" placeholder="\u2014" oninput="onTreadLive(\''+id+'\',\''+k+'\',this.value)">'
+      +'<span class="unit">/ 32"</span>'
+      +'<div class="stepper"><button class="step-btn" onclick="stepTread(\''+id+'\',\''+k+'\',-1)">\u2212</button><button class="step-btn" onclick="stepTread(\''+id+'\',\''+k+'\',1)">+</button></div>'
+      +'</div>';
+  }).join('');
+
+  // Condition chips
+  var chips=COND_LIST.map(function(c){
+    var isSel=s.condition===c;
+    var chipCls=isSel?(COND_CLASS[c]||'active-good'):'';
+    return '<button class="cond-chip '+chipCls+'" onclick="onCondition(\''+id+'\',\''+c+'\')">'+c+'</button>';
+  }).join('');
+
+  // Quick tread presets
+  var presets='<div class="tread-presets">'
+    +'<span class="preset-lbl">Quick:</span>'
+    +'<button class="preset-btn p-red" onclick="setTread(\''+id+'\',2)" title="2/32 - Replace NOW">2</button>'
+    +'<button class="preset-btn p-red" onclick="setTread(\''+id+'\',3)" title="3/32">3</button>'
+    +'<button class="preset-btn p-amber" onclick="setTread(\''+id+'\',4)" title="4/32 - Replace Soon">4</button>'
+    +'<button class="preset-btn p-amber" onclick="setTread(\''+id+'\',5)" title="5/32">5</button>'
+    +'<button class="preset-btn p-green" onclick="setTread(\''+id+'\',6)" title="6/32">6</button>'
+    +'<button class="preset-btn p-green" onclick="setTread(\''+id+'\',7)" title="7/32">7</button>'
+    +'<button class="preset-btn p-green" onclick="setTread(\''+id+'\',8)" title="8/32">8</button>'
+    +'<button class="preset-btn p-green" onclick="setTread(\''+id+'\',10)" title="10/32">10</button>'
+    +'<button class="preset-btn p-green" onclick="setTread(\''+id+'\',12)" title="12/32 - New">12</button>'
+    +'</div>';
+
+  var photoHtml=s.photo?'<img class="photo-preview" src="'+s.photo+'">':'';
+
+  card.innerHTML='<div class="card-header"><span class="icon">🛞</span><span class="pos">'+t.label+'</span><span class="'+badgeCls+'" id="badge-'+id+'">'+badgeTxt+'</span></div>'
+    +sameBar
+    +'<div class="field-row">'
+    +'<div class="'+(dotMiss?'field-group field-missing':'field-group')+'" id="dotwrap-'+id+'"><label>DOT Date (WWYY)</label>'
+    +'<input class="field-input" type="text" maxlength="4" id="dot-'+id+'" placeholder="e.g. 2319" value="'+s.dot+'" oninput="onDotLive(\''+id+'\',this.value)">'
+    +'<div class="field-hint" id="dotwarn-'+id+'"></div></div>'
+    +'<div class="'+(sizeMiss?'field-group field-missing':'field-group')+'" id="sizewrap-'+id+'"><label>Tire Size</label>'
+    +'<input class="field-input" type="text" id="size-'+id+'" placeholder="E.G. 235/55R19" value="'+s.size+'" oninput="onSizeLive(\''+id+'\',this.value)">'
+    +'<div class="field-hint" id="sizehint-'+id+'"></div></div>'
+    +'</div>'
+    +'<div class="tread-label">TREAD DEPTH \u2014 OUTER / MIDDLE / INNER</div>'
+    +presets
+    +'<div class="tread-blocks">'
+    +'<div class="tread-block '+oc+'" id="block-'+id+'-outer"><span>OUT</span></div>'
+    +'<div class="tread-block '+mc+'" id="block-'+id+'-middle"><span>MID</span></div>'
+    +'<div class="tread-block '+ic+'" id="block-'+id+'-inner"><span>INN</span></div>'
+    +'</div>'
+    +'<div class="tread-inputs">'+treadCols+'</div>'
+    +'<div class="worst-row"><span class="worst-lbl">WORST:</span><div class="worst-badge '+wCls+'" id="worst-'+id+'">'+wTxt+'</div></div>'
+    +'<div class="condition-wrap"><div class="cw-label">CONDITION</div><div class="cond-chips">'+chips+'</div></div>'
+    +'<div class="ai-detect '+aiShow+'" id="ai-'+id+'">'+aiTxt+'</div>'
+    +'<hr class="card-divider">'
+    +'<div class="photo-row"><button class="photo-btn">📷 Photo</button>'
+    +'<label class="upload-btn">\u2191 UPLOAD<input type="file" accept="image/*" onchange="onPhoto(\''+id+'\',this)"></label></div>'
+    +photoHtml;
+
+  refreshDotWarning(id); refreshSizeValidation(id); updateCardLockStates();
+}
+
+// -- Set tread preset (all 3 fields) ---------------------
+function setTread(id,val){
+  S[id].outer=String(val);S[id].middle=String(val);S[id].inner=String(val);
+  ['outer','middle','inner'].forEach(function(k){var el=document.getElementById('tread-'+id+'-'+k);if(el)el.value=val;});
+  refreshTreadDisplay(id); checkAlignment(); buildRecommendations(); checkAutoAdvance(id);
+}
+
+// -- Event handlers ---------------------------------------
+function onDotLive(id,val){S[id].dot=val;refreshDotWarning(id);updateCardStatus(id);buildRecommendations();checkAutoAdvance(id);}
+function onSizeLive(id,val){S[id].size=val;refreshSizeValidation(id);updateCardStatus(id);buildRecommendations();checkAutoAdvance(id);}
+function onTreadLive(id,key,val){S[id][key]=val;refreshTreadDisplay(id);checkAlignment();buildRecommendations();checkAutoAdvance(id);}
+function onCondition(id,val){
+  S[id].condition=val;
+  // Re-render just the chips section
+  var wrap=document.querySelector('#card-'+id+' .cond-chips');
+  if(wrap){wrap.innerHTML=COND_LIST.map(function(c){var isSel=val===c;var chipCls=isSel?(COND_CLASS[c]||'active-good'):'';return'<button class="cond-chip '+chipCls+'" onclick="onCondition(\''+id+'\',\''+c+'\')">'+c+'</button>';}).join('');}
+  refreshTreadDisplay(id);checkAlignment();buildRecommendations();checkAutoAdvance(id);
+}
+function stepTread(id,key,delta){
+  var next=Math.max(0,Math.min(20,(parseInt(S[id][key])||0)+delta));
+  S[id][key]=String(next);var box=document.getElementById('tread-'+id+'-'+key);if(box)box.value=next;
+  refreshTreadDisplay(id);checkAlignment();buildRecommendations();checkAutoAdvance(id);
+}
+function onPhoto(id,input){var file=input.files[0];if(!file)return;var r=new FileReader();r.onload=function(e){S[id].photo=e.target.result;renderCard(id);};r.readAsDataURL(file);}
+
+// -- Recommendations Engine --------------------------------
+// Smart tread-depth-aware replacement logic based on industry standards:
+// AWD:   new tire(~10/32") vs remaining: <=2/32" gap = 1 tire OK; <=4/32" = 1 tire + shave note; <=6/32" = 2 tires; >6/32" = 4 tires
+//        Sources: Dunn Tire (4/32" AWD max), Audi manual (4/32"), Subaru (2/32"), TireGrades, Les Schwab
+// FWD/RWD: new tire vs opposite axle side: <=2/32" = 1 OK; >2/32" = replace pair
+// Live Axle: always replace both on same axle
+// Alignment: always recommend when 2+ tires being replaced
+
+function buildRecommendations(){
+  var body=document.getElementById('recBody'),ts=document.getElementById('recTimestamp'),recVeh=document.getElementById('recVehicle'),recSum=document.getElementById('recSummary');
+  ts.textContent='Updated '+new Date().toLocaleTimeString();
+  var dtLabel={FWD:'Front-Wheel Drive',RWD:'Rear-Wheel Drive',AWD:'All-Wheel Drive (AWD/4WD)',LIVE_REAR:'Live (Solid) Axle — Rear',LIVE_FRONT:'Live (Solid) Axle — Front'};
+  var vehHtml='';
+  if(vinInfo.year||vinInfo.make||vinInfo.model){if(vinInfo.year)vehHtml+='<span class="rv-item"><span class="rv-label">YEAR</span><span class="rv-val">'+vinInfo.year+'</span></span>';if(vinInfo.make)vehHtml+='<span class="rv-item"><span class="rv-label">MAKE</span><span class="rv-val">'+vinInfo.make+'</span></span>';if(vinInfo.model)vehHtml+='<span class="rv-item"><span class="rv-label">MODEL</span><span class="rv-val">'+vinInfo.model+'</span></span>';}
+  vehHtml+='<span class="rv-item"><span class="rv-label">DRIVE</span><span class="rv-drive">'+(dtLabel[driveType]||driveType)+'</span></span>';
+  recVeh.innerHTML=vehHtml; recVeh.className='rec-vehicle show';
+
+  var groups={immediate:[],soon:[],advisory:[],good:[]};
+  var hasAnyData=false;
+  var vehName=(vinInfo.year?vinInfo.year+' ':'')+(vinInfo.make||'')+(vinInfo.model?' '+vinInfo.model:'');
+  var flW=worstOf('FL'),frW=worstOf('FR'),rlW=worstOf('RL'),rrW=worstOf('RR');
+  var allTreads={FL:flW,FR:frW,RL:rlW,RR:rrW};
+  var tiresNeedingReplace=[];
+  TIRES.forEach(function(t){var s=S[t.id],w=worstOf(t.id),cond=s.condition;if(cond==='Flat / Low Pressure'||cond==='Sidewall Damage'||cond==='Not Repairable'||cond==='Bulge / Damage'||cond==='Dry Rot'||(w!==null&&w<=2))tiresNeedingReplace.push(t.id);});
+  var totalReplacementsRecommended=0;
+
+    // -- AWD SMART QTY DECISION --------------------------------
+  // Full logic considering ALL factors:
+  //   1. Are other tires already worn near replacement? -> all 4
+  //   2. Do other tires need replacing soon (<=4/32)? -> all 4
+  //   3. Are tires worn/mismatched across set? -> all 4
+  //   4. Only if remaining 3 are truly healthy -> 1 tire may be OK
+  function awdQtyDecision(replacedId){
+    var rem=[];
+    TIRES.forEach(function(t){
+      if(t.id!==replacedId){var w=allTreads[t.id];if(w!==null)rem.push({id:t.id,depth:w});}
+    });
+
+    if(rem.length<3){
+      return{qty:4,reason:'Insufficient tread data on remaining tires - replace all 4 for safety.',shave:''};
+    }
+
+    var remDepths=rem.map(function(r){return r.depth;});
+    var minRem=Math.min.apply(null,remDepths);
+    var maxRem=Math.max.apply(null,remDepths);
+    var remSpread=maxRem-minRem;
+    var newD=10; // typical new tire
+    var gapToMin=newD-minRem;
+
+    // RULE 1: Any remaining tire at 4/32" or below = already needs replacing = all 4
+    if(minRem<=4){
+      return{qty:4,
+        reason:'Remaining tires are at or below the 4/32" replacement threshold (lowest: '+minRem+'/32"). '
+          +'Installing 1 new tire (~10/32") next to tires that already need replacing makes no economic or safety sense. '
+          +'Replace all 4 now.',shave:''};
+    }
+
+    // RULE 2: Any remaining tire at 5/32" or below = will need replacing very soon = strongly recommend all 4
+    if(minRem<=5){
+      return{qty:4,
+        reason:'Remaining tires are at '+minRem+'/32" - approaching the 4/32" replacement threshold soon. '
+          +'Replacing just 1 tire now means replacing the other 3 again within months. '
+          +'More economical and safer to do all 4 at once.',shave:''};
+    }
+
+    // RULE 3: Remaining tires uneven across the set (>2/32" spread) = AWD already stressed
+    if(remSpread>2){
+      return{qty:4,
+        reason:'Existing tires show '+remSpread+'/32" variance across the set ('+
+          rem.map(function(r){return r.id+':'+r.depth;}).join(', ')+'/32"). '
+          +'The AWD system is already working harder than it should. Replacing 1 tire will make this worse. Replace all 4.',shave:''};
+    }
+
+    // RULE 4: Gap between new tire and remaining is >4/32" = exceeds AWD tolerance
+    if(gapToMin>6){
+      return{qty:4,
+        reason:'New tire (~'+newD+'/32") vs remaining minimum ('+minRem+'/32") = '+gapToMin+'/32" gap. '
+          +'Far exceeds the 4/32" AWD tolerance. The differential cannot safely handle this mismatch.',shave:''};
+    }
+
+    // RULE 5: Remaining tires at 6/32" or below = approaching replacement window
+    // If one tire already needs replacing AND others are at 6/32" or below,
+    // those remaining tires will need replacing within months. Do all 4 now.
+    if(minRem<=6){
+      return{qty:4,
+        reason:'Remaining tires are at '+minRem+'/32" — in the monitoring/approaching-replacement zone. '
+          +'Since one tire already requires replacement, replacing just that one tire '
+          +'means the other 3 will need replacing in the near future. '
+          +'It is more economical, safer, and protects the AWD drivetrain to replace all 4 now.',shave:''};
+    }
+
+    // RULE 6: Gap >4/32" = borderline, replace axle pair minimum
+    if(gapToMin>4){
+      return{qty:2,
+        reason:'New tire (~'+newD+'/32") vs remaining minimum ('+minRem+'/32") = '+gapToMin+'/32" gap. '
+          +'Approaches AWD tolerance limit. Replace both tires on the same axle as a pair.',
+        shave:'Or: shave new tire to '+minRem+'/32" ($20-40) to match existing, reducing to 1 tire.'};
+    }
+
+    // RULE 7: Gap 2-4/32" = within industry spec, 1 tire OK with shave note
+    if(gapToMin>2){
+      return{qty:1,
+        reason:'New tire (~'+newD+'/32") vs remaining minimum ('+minRem+'/32") = '+gapToMin+'/32" gap. '
+          +'Within the 4/32" industry threshold (Dunn Tire/Audi spec). Single replacement acceptable.',
+        shave:'TIP: Shave new tire to '+minRem+'/32" ($20-40) to eliminate all drivetrain variance entirely.'};
+    }
+
+    // RULE 8: Gap <=2/32" = fully safe, 1 tire
+    return{qty:1,
+      reason:'New tire (~'+newD+'/32") vs remaining minimum ('+minRem+'/32") = '+gapToMin+'/32" gap. '
+        +'Within the 2/32" strict tolerance (Subaru/Audi spec). Single replacement is safe.',shave:''};
+  }
+
+  // FWD/RWD axle pair decision: compare new tire vs opposite side
+  function axlePairDecision(replacedId){
+    var oppMap={FL:'FR',FR:'FL',RL:'RR',RR:'RL'};
+    var oppId=oppMap[replacedId],oppD=oppId?allTreads[oppId]:null,newD=10;
+    var t=TIRES.filter(function(x){return x.id===replacedId;})[0];
+    if(oppD===null)return{qty:1,reason:'Opposite side tread unknown. Verify match within 2/32" on installation.',note:''};
+
+    // If opposite is already worn (<=4/32"), replace both since it needs replacing anyway
+    if(oppD<=4){
+      return{qty:2,reason:'Opposite '+oppId+' is at '+oppD+'/32" — already at/below replacement threshold. Replace both '+t.axle+' tires now.',note:''};
+    }
+    if(oppD<=5){
+      return{qty:2,reason:'Opposite '+oppId+' is at '+oppD+'/32" — will need replacement very soon. Replace both '+t.axle+' tires at the same time.',note:''};
+    }
+
+    var gap=newD-oppD;
+    if(gap<=2)return{qty:1,reason:'Opposite '+oppId+' at '+oppD+'/32". Gap: '+gap+'/32" — within 2/32" safe threshold. Single replacement fine.',note:''};
+    if(gap<=4)return{qty:2,reason:'Opposite '+oppId+' at '+oppD+'/32". Gap: '+gap+'/32" — replace both '+t.axle+' tires as a matched pair.',note:'Alt: shave new tire to '+oppD+'/32" to match ($20-40).'};
+    return{qty:2,reason:'Opposite '+oppId+' at '+oppD+'/32". Gap: '+gap+'/32" — replace both '+t.axle+' tires as a pair.',note:''};
+  }
+  // FWD/RWD: compare new tire vs opposite on same axle
+  function axlePairDecision(replacedId){
+    var oppMap={FL:'FR',FR:'FL',RL:'RR',RR:'RL'};
+    var oppId=oppMap[replacedId],oppD=oppId?allTreads[oppId]:null,newD=10;
+    var t=TIRES.filter(function(x){return x.id===replacedId;})[0];
+    if(oppD===null)return{qty:1,reason:'Opposite side tread unknown. Verify match within 2/32" on installation.',note:''};
+    var gap=newD-oppD;
+    if(gap<=2)return{qty:1,reason:'Opposite '+oppId+' at '+oppD+'/32". New tire gap: '+gap+'/32" — within 2/32" safe threshold. Single replacement is fine.',note:''};
+    if(gap<=4)return{qty:2,reason:'Opposite '+oppId+' at '+oppD+'/32". Gap of '+gap+'/32" — recommend replacing both '+t.axle+' tires as a matched pair for balanced handling.',note:'Alt: shave new tire to '+oppD+'/32" to match existing ($20–$40).'};
+    return{qty:2,reason:'Opposite '+oppId+' at '+oppD+'/32". Gap of '+gap+'/32" — replace both '+t.axle+' tires as a pair.',note:''};
+  }
+
+  TIRES.forEach(function(t){
+    var id=t.id,s=S[id],w=worstOf(id),cond=s.condition;
+    var dotV=s.dot?validateDOT(s.dot):null,sizeV=s.size?validateTireSize(s.size):null;
+    if(s.dot||s.size||s.outer||s.middle||s.inner||cond!=='Good')hasAnyData=true;
+    var isFlat=cond==='Flat / Low Pressure',isSidewall=cond==='Sidewall Damage',isNotRep=cond==='Not Repairable',isRep=cond==='Repairable - Nail/Screw',isBulge=cond==='Bulge / Damage',isDryRot=cond==='Dry Rot',isCracking=cond==='Cracking',treadCrit=w!==null&&w<=2;
+    var needsReplace=isSidewall||isNotRep||isBulge||isFlat||isDryRot||treadCrit;
+    var reason='';
+    if(isFlat)reason='flat/low pressure';else if(isSidewall)reason='sidewall damage — cannot be safely repaired';else if(isBulge)reason='bulge/internal structural damage';else if(isNotRep)reason='non-repairable condition';else if(isDryRot)reason='dry rot/ozone cracking';else if(treadCrit)reason='tread '+w+'/32" — below legal minimum (2/32")';
+
+    if(needsReplace){
+      if(driveType==='AWD'){
+        var dec=awdQtyDecision(id);
+        totalReplacementsRecommended+=dec.qty;
+        var qtyLine='QTY: '+dec.qty+' tire'+(dec.qty>1?'s':'')+'. '+dec.reason+(dec.shave?' '+dec.shave:'');
+        var detailLine=dec.qty===4?('<strong>'+(vehName||'This AWD vehicle')+':</strong> '+dec.reason+' AWD/4WD requires all 4 tires within 4/32” of each other. A new tire at ~10/32” next to worn tires creates a permanent circumference mismatch that overloads the differential ($2,000–$8,000+ repair).'):(dec.qty===2?'Replacing '+id+' and its axle partner brings the set within AWD variance. '+dec.reason:'Single replacement is within AWD tolerance. '+dec.reason);
+        groups.immediate.push({icon:'🚨',bullet:'red',pri:'p1',main:t.label+': Replace — AWD Smart Analysis: '+dec.qty+' Tire'+(dec.qty>1?'s Required':''),detail:detailLine,why:'Reason for '+t.label+': '+reason,qty:'🛞 '+qtyLine});
+      } else if(driveType==='LIVE_REAR'||driveType==='LIVE_FRONT'){
+        var lax=(driveType==='LIVE_REAR')?'rear':'front';
+        var onLive=(driveType==='LIVE_REAR'&&t.axle==='rear')||(driveType==='LIVE_FRONT'&&t.axle==='front');
+        if(onLive){totalReplacementsRecommended+=2;groups.immediate.push({icon:'\u26A0',bullet:'red',pri:'p1',main:t.label+': Replace BOTH '+lax.toUpperCase()+' Tires — Live Axle Rule',detail:'A live/solid axle is a single rigid shaft connecting both '+lax+' wheels with no independent suspension. Both wheels share one differential. Any circumference difference forces the differential to fight itself on every rotation — binding, vibration, axle damage. Always replace as a matched pair.',why:'Reason: '+reason,qty:'🛞 QTY: 2 tires — both '+lax+' as matched pair, same brand/model/size.'});}
+        else{totalReplacementsRecommended+=1;groups.immediate.push({icon:'🚫',bullet:'red',pri:'p1',main:t.label+': Replace Tire — Non-Live Axle (1 Tire)',detail:t.label+' is on the independently-suspended '+t.axle+' axle. Single replacement safe. Match tread of opposite side within 2/32".',why:'Reason: '+reason,qty:'🛞 QTY: 1 tire.'});}
+      } else if(driveType==='RWD'){
+        var isD=(t.axle==='rear');
+        var decR=axlePairDecision(id);
+        totalReplacementsRecommended+=decR.qty;
+        groups.immediate.push({icon:'\u26A0',bullet:'red',pri:'p1',main:t.label+': Replace — RWD '+(isD?'Rear Drive':'Front Non-Drive')+' — '+decR.qty+' Tire'+(decR.qty>1?'s':''),detail:(isD?'RWD rear tires handle all engine torque. ':'Front non-drive on RWD. ')+decR.reason,why:'Reason: '+reason,qty:'🛞 QTY: '+decR.qty+' tire'+(decR.qty>1?'s.':'.')+(decR.note?' '+decR.note:'')});
+      } else { // FWD
+        var isF=(t.axle==='front');
+        var decF=axlePairDecision(id);
+        totalReplacementsRecommended+=decF.qty;
+        groups.immediate.push({icon:isF?'\u26A0':'🚫',bullet:'red',pri:'p1',main:t.label+': Replace — FWD '+(isF?'Front Drive':'Rear Non-Drive')+' — '+decF.qty+' Tire'+(decF.qty>1?'s':''),detail:(isF?'FWD fronts handle drive, steering, and braking. ':'Rear non-drive on FWD. ')+decF.reason,why:'Reason: '+reason,qty:'🛞 QTY: '+decF.qty+' tire'+(decF.qty>1?'s.':'.')+(decF.note?' '+decF.note:'')});
+      }
+    }
+
+    if(isRep){groups.soon.push({icon:'🔧',bullet:'amber',pri:'p2',main:t.label+': Tire Repair — Nail/Screw Puncture',detail:'Plug-and-patch from inside required (plugs alone not DOT-compliant). Confirm <1/4" diameter, center tread zone only, not near shoulder or sidewall.',why:'',qty:'🔧 SERVICE: Plug-and-patch repair ($20–$40).'});}
+    if(isCracking){groups.soon.push({icon:'\u26A0',bullet:'amber',pri:'p2',main:t.label+': Sidewall Cracking — Inspection Required',detail:'Deep cracking (2mm+) is structural risk. Tires over 6 years with cracking: replace.',why:'',qty:'\u26A0 May need 1–4 tires depending on severity.'});}
+    if(w!==null&&w<=4&&w>2){groups.soon.push({icon:'🟡',bullet:'amber',pri:'p2',main:t.label+': Replace Soon — '+w+'/32"',detail:'Below 4/32" recommended threshold. Wet braking distance up 40% at this depth.',why:'',qty:'🛞 Plan replacement within 30–90 days.'});}
+    if(w!==null&&w>=5&&w<=7&&!needsReplace){groups.advisory.push({icon:'📋',bullet:'blue',pri:'p3',main:t.label+': Monitor — '+w+'/32"',detail:'Approaching 4/32" threshold. Start planning.',why:'',qty:''});}
+    if(w!==null&&w>=8&&!needsReplace){groups.good.push({icon:'\u2705',bullet:'green',pri:'p3',main:t.label+': Good — '+w+'/32"',detail:'Tread within safe range.',why:'',qty:''});}
+    if(dotV&&dotV.ok==='replace'){groups.immediate.push({icon:'📅',bullet:'red',pri:'p1',main:t.label+': Replace — '+Math.round(dotV.age)+' Years Old (10-Year Limit Exceeded)',detail:'Week '+dotV.week+', '+dotV.year+' ('+dotV.age.toFixed(1)+' yrs). Rubber degrades from UV/ozone/heat regardless of tread. Internal belt separation risk rises significantly past 10 years.',why:'',qty:'🛞 Replace regardless of tread.'});}
+    else if(dotV&&dotV.ok==='warn'){groups.soon.push({icon:'📅',bullet:'amber',pri:'p2',main:t.label+': Age Warning — '+Math.round(dotV.age)+' Years Old',detail:'Week '+dotV.week+', '+dotV.year+' ('+dotV.age.toFixed(1)+' yrs). Degradation accelerates after 6 years. Annual specialist inspection.',why:'',qty:''});}
+    if(dotV&&dotV.ok===false){groups.soon.push({icon:'\u26A0',bullet:'amber',pri:'p2',main:t.label+': Invalid DOT — Tire Age Unknown',detail:dotV.msg+'. Cannot verify age — inspect for dry rot, cracking, aging.',why:'',qty:''});}
+    if(sizeV&&sizeV.ok===false){groups.advisory.push({icon:'📏',bullet:'blue',pri:'p3',main:t.label+': Non-Standard Tire Size — Verify',detail:sizeV.msg+'. Re-check sidewall.',why:'',qty:''});}
+    var uw=unevenWear(id);
+    if(uw.uneven){groups.advisory.push({icon:'🔄',bullet:'amber',pri:'p2',main:t.label+': Alignment/Suspension Check — '+uw.diff+'/32" Variance',detail:'Pattern: '+uw.note+'. Indicates misalignment or worn suspension components. Inspect ball joints, tie rods, control arms.',why:'',qty:'🔧 SERVICE: 4-wheel alignment + suspension inspection.'});}
+  });
+
+  // AWD global tread variance check (no replacement conditions triggered)
+  if(driveType==='AWD'){
+    var allV=[flW,frW,rlW,rrW].filter(function(v){return v!==null;});
+    if(allV.length===4&&tiresNeedingReplace.length===0){
+      var awdMax=Math.max.apply(null,allV),awdMin=Math.min.apply(null,allV),awdDiff=awdMax-awdMin;
+      if(awdDiff>4){groups.immediate.push({icon:'🚨',bullet:'red',pri:'p1',main:'AWD CRITICAL: Replace All 4 Tires — '+awdDiff+'/32" Variance Across Set',detail:'FL:'+flW+' FR:'+frW+' RL:'+rlW+' RR:'+rrW+'/32". The '+awdDiff+'/32" spread exceeds the 4/32" AWD safety limit. Differential under constant stress. <strong>Source: Dunn Tire industry best practices; Audi 4/32" max; Subaru 2/32" max.</strong>',why:'',qty:'🛞 QTY: 4 tires — same brand/model/size/speed rating on all corners.'});}
+      else if(awdDiff>2){groups.soon.push({icon:'\u26A0',bullet:'amber',pri:'p2',main:'AWD Caution: '+awdDiff+'/32" Tread Variance (Approaching Limit)',detail:'FL:'+flW+' FR:'+frW+' RL:'+rlW+' RR:'+rrW+'/32". Within 4/32" threshold but above the stricter 2/32" Subaru/Audi limit. Evaluate all 4 when any tire needs replacement.',why:'',qty:'\u26A0 Monitor. Plan 4-tire set if any replacement needed.'});}
+    }
+  }
+
+  // Axle mismatch (no replacements needed)
+  if(tiresNeedingReplace.length===0){
+    if(flW!==null&&frW!==null&&Math.abs(flW-frW)>4){groups.soon.push({icon:'\u2194',bullet:'amber',pri:'p2',main:'Front Axle Mismatch: FL '+flW+' vs FR '+frW+'/32" ('+Math.abs(flW-frW)+'/32" diff)',detail:'Plan front pair replacement when lower tire needs replacing.',why:'',qty:'\u26A0 Replace as pair.'});}
+    if(rlW!==null&&rrW!==null&&Math.abs(rlW-rrW)>4){groups.soon.push({icon:'\u2194',bullet:'amber',pri:'p2',main:'Rear Axle Mismatch: RL '+rlW+' vs RR '+rrW+'/32" ('+Math.abs(rlW-rrW)+'/32" diff)',detail:'Plan rear pair replacement when lower tire needs replacing.',why:'',qty:'\u26A0 Replace as pair.'});}
+  }
+
+  // Alignment: always recommend when 2+ tires replaced
+  var alignReasons=[];
+  TIRES.forEach(function(t){var uw=unevenWear(t.id);if(uw.uneven)alignReasons.push(t.label);if(S[t.id].condition==='Uneven Wear')alignReasons.push(t.label);});
+  if(flW!==null&&frW!==null&&Math.abs(flW-frW)>=2)alignReasons.push('front axle tread variance');
+  if(rlW!==null&&rrW!==null&&Math.abs(rlW-rrW)>=2)alignReasons.push('rear axle tread variance');
+  if(totalReplacementsRecommended>=2)alignReasons.push(totalReplacementsRecommended+' tires being replaced');
+  if(alignReasons.length>0){
+    groups.advisory.push({icon:'🎯',bullet:'amber',pri:'p2',
+      main:'4-Wheel Alignment Recommended'+(totalReplacementsRecommended>=2?' — Required When Replacing 2+ Tires':''),
+      detail:'Reasons: '+alignReasons.join('; ')+'. Always align before or after new tire installation to prevent premature wear on new tires.',
+      why:'',qty:'🔧 SERVICE: 4-wheel alignment ($80–$150 typical).'});
+  }
+
+  // Rotation (only if nothing critical)
+  if(groups.immediate.length===0&&groups.soon.length===0){
+    var allP=[flW,frW,rlW,rrW].filter(function(v){return v!==null;});
+    if(allP.length>=2){var rMax=Math.max.apply(null,allP),rMin=Math.min.apply(null,allP);if(rMax-rMin>=2){groups.advisory.push({icon:'🔄',bullet:'blue',pri:'p3',main:'Tire Rotation Recommended — '+(rMax-rMin)+'/32" Variance',detail:'Rotate every 5,000–7,500 miles to equalize wear.',why:'',qty:'🔧 SERVICE: Rotation ($20–$60).'});}}
+  }
+
+  if(!hasAnyData){body.innerHTML='<div class="rec-empty">Enter tire data above to generate recommendations…</div>';recSum.className='rec-summary';return;}
+
+  var html='';
+  function rg(title,items,cls){
+    if(!items.length)return'';
+    var out='<div class="rec-group"><div class="rec-group-title">'+title+'</div>';
+    items.forEach(function(item){out+='<div class="rec-item '+cls+'"><div class="rec-bullet '+item.bullet+'"></div><div class="rec-text"><div class="rt-main">'+item.icon+' '+item.main+'</div><div class="rt-detail">'+item.detail+'</div>'+(item.why?'<div class="rt-why">'+item.why+'</div>':'')+(item.qty?'<div class="rt-qty">'+item.qty+'</div>':'')+'</div><div class="rec-priority '+item.pri+'">'+(item.pri==='p1'?'URGENT':item.pri==='p2'?'SOON':'INFO')+'</div></div>';});
+    return out+'</div>';
+  }
+  html+=rg('🔴 IMMEDIATE ACTION REQUIRED',groups.immediate,'crit');
+  html+=rg('🟡 SERVICE SOON (30–90 Days)',groups.soon,'warn');
+  html+=rg('📋 ADVISORY & NOTES',groups.advisory,'info');
+  html+=rg('\u2705 ACCEPTABLE CONDITION',groups.good,'good');
+  if(!html)html='<div class="rec-empty">All entered data looks acceptable. Continue monitoring.</div>';
+  body.innerHTML=html;
+
+  var urg=groups.immediate.length,soon2=groups.soon.length;
+  var allTV=[flW,frW,rlW,rrW].filter(function(v){return v!==null;});
+  var lo=allTV.length?Math.min.apply(null,allTV):'--';
+  if(urg+soon2>0){
+    recSum.className='rec-summary show';
+    recSum.innerHTML='<div class="rec-summary-title">📊 Inspection Summary</div><div class="rec-summary-grid"><div class="rec-sum-tile"><div class="rst-label">Urgent</div><div class="rst-val" style="color:#e05050;">'+urg+'</div><div class="rst-sub">Immediate action</div></div><div class="rec-sum-tile"><div class="rst-label">Service Soon</div><div class="rst-val" style="color:#e8b840;">'+soon2+'</div><div class="rst-sub">30-90 days</div></div><div class="rec-sum-tile"><div class="rst-label">Lowest Tread</div><div class="rst-val">'+(lo!=='--'?lo+'/32"':lo)+'</div><div class="rst-sub">Worst of 4</div></div><div class="rec-sum-tile"><div class="rst-label">Replace</div><div class="rst-val" style="color:#c8f040;">'+totalReplacementsRecommended+'</div><div class="rst-sub">Tires recommended</div></div></div>';
+  }else{recSum.className='rec-summary';}
+}
+
+// -- Print / PDF --------------------------------------
+function printReport(){
+  buildRecommendations();
+  setTimeout(function(){window.print();},200);
+}
+
+function updatePrintFields(){
+  var gv=function(id){var e=document.getElementById(id);return e?e.value:'';};
+  var setTxt=function(id,val){var el=document.getElementById(id);if(el)el.textContent=val||'—';};
+  setTxt('printCustName',gv('custName'));
+  setTxt('printMileage',gv('custMileage'));
+  setTxt('printLicense',gv('custLicense'));
+  setTxt('printAdvisor',gv('custAdvisor'));
+  setTxt('printTech',gv('custTech'));
+  var woEl=document.getElementById('printWO');if(woEl)woEl.textContent=gv('custWO')||'—';
+  var dateEl=document.getElementById('printDate2');if(dateEl)dateEl.textContent=gv('custDate')||'—';
+  var vehParts=[];
+  if(vinInfo.year)vehParts.push(vinInfo.year);
+  if(vinInfo.make)vehParts.push(vinInfo.make);
+  if(vinInfo.model)vehParts.push(vinInfo.model);
+  var pv=document.getElementById('printVehicle');
+  if(pv)pv.textContent=vehParts.length?vehParts.join(' '):'—';
+}
+
+// -- VIN History (localStorage) ----------------------
+var VIN_HISTORY_KEY='tireInspVinHistory';
+function loadVinHistory(){try{var r=localStorage.getItem(VIN_HISTORY_KEY);return r?JSON.parse(r):[];}catch(e){return[];}}
+function saveVinToHistory(vin,info){
+  try{
+    var hist=loadVinHistory().filter(function(h){return h.vin!==vin;});
+    hist.unshift({vin:vin,year:info.year||'',make:info.make||'',model:info.model||'',ts:Date.now()});
+    if(hist.length>8)hist=hist.slice(0,8);
+    localStorage.setItem(VIN_HISTORY_KEY,JSON.stringify(hist));
+  }catch(e){}
+  renderVinHistory();
+}
+function renderVinHistory(){
+  var hist=loadVinHistory();
+  var section=document.getElementById('vinHistorySection');
+  var row=document.getElementById('vinHistoryRow');
+  if(!section||!row)return;
+  if(!hist.length){section.style.display='none';return;}
+  section.style.display='block';
+  // Use data attributes + event delegation to avoid quote issues in onclick
+  row.innerHTML='';
+  hist.forEach(function(h){
+    var sub=((h.year?h.year+' ':'')+h.make+(h.model?' '+h.model:'')).trim();
+    var chip=document.createElement('div');
+    chip.className='vin-history-chip';
+    chip.title='Load this VIN';
+    chip.setAttribute('data-vin',h.vin);
+    chip.innerHTML='<span class="vh-vin">'+h.vin+'</span>'
+      +(sub?'<span class="vh-info">'+sub+'</span>':'')
+      +'<span class="vh-del" title="Remove">×</span>';
+    chip.querySelector('.vh-del').addEventListener('click',function(e){
+      e.stopPropagation();
+      deleteHistoryVin(h.vin);
+    });
+    chip.addEventListener('click',function(){
+      loadHistoryVin(h.vin);
+    });
+    row.appendChild(chip);
+  });
+}
+function loadHistoryVin(vin){
+  var inp=document.getElementById('vinInput');
+  if(inp){inp.value=vin;onVinInput(vin);}
+  lookupVin();
+  showToast('Loading VIN: '+vin);
+}
+function deleteHistoryVin(vin){
+  try{var hist=loadVinHistory().filter(function(h){return h.vin!==vin;});localStorage.setItem(VIN_HISTORY_KEY,JSON.stringify(hist));}catch(e){}
+  renderVinHistory();
+  showToast('VIN removed from history');
+}
+
+// -- Keyboard shortcuts ------------------------------
+document.addEventListener('keydown',function(e){
+  if(!e.altKey)return;
+  if(e.key==='1'){e.preventDefault();scrollToCard('FL');}
+  else if(e.key==='2'){e.preventDefault();scrollToCard('FR');}
+  else if(e.key==='3'){e.preventDefault();scrollToCard('RL');}
+  else if(e.key==='4'){e.preventDefault();scrollToCard('RR');}
+  else if(e.key==='c'||e.key==='C'){e.preventDefault();copyFrontToRear();}
+  else if(e.key==='s'||e.key==='S'){e.preventDefault();fillAllSame();}
+  else if(e.key==='p'||e.key==='P'){e.preventDefault();printReport();}
+  else if(e.key==='x'||e.key==='X'){e.preventDefault();clearAll();}
+});
+
+// -- Swipe on mobile -----------------------------------
+(function(){
+  var sX=0,sY=0,sId=null;
+  document.addEventListener('touchstart',function(e){var c=e.target.closest('.tire-card');if(!c)return;sX=e.touches[0].clientX;sY=e.touches[0].clientY;var m=c.id.match(/card-(.+)/);sId=m?m[1]:null;},{passive:true});
+  document.addEventListener('touchend',function(e){
+    if(!sId)return;var dx=e.changedTouches[0].clientX-sX,dy=e.changedTouches[0].clientY-sY;
+    if(Math.abs(dx)<60||Math.abs(dy)>Math.abs(dx))return;
+    var idx=ORDER.indexOf(sId);
+    if(dx<0&&idx<ORDER.length-1)scrollToCard(ORDER[idx+1]);
+    else if(dx>0&&idx>0)scrollToCard(ORDER[idx-1]);
+    sId=null;
+  },{passive:true});
+})();
+
+// Auto-set today's date
+(function(){
+  var d=document.getElementById('custDate');
+  if(d){var now=new Date(),iso=now.getFullYear()+'-'+String(now.getMonth()+1).padStart(2,'0')+'-'+String(now.getDate()).padStart(2,'0');d.value=iso;updatePrintFields();}
+})();
+
+// -- Init -------------------------------------------------
+TIRES.forEach(function(t){renderCard(t.id);});
+updateProgressSteps(); checkAlignment(); buildRecommendations();
+renderVinHistory();
+</script>
+</body>
+</html>
