@@ -1,0 +1,3733 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>AutoAdvisor — Vehicle Maintenance Guide</title>
+<link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Mono:wght@300;400;500&family=DM+Sans:wght@300;400;500&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d0e0f;
+    --surface: #141618;
+    --border: #252729;
+    --accent: #e8ff47;
+    --accent2: #ff6b35;
+    --text: #e8e9eb;
+    --muted: #6b7280;
+    --good: #4ade80;
+    --warn: #facc15;
+    --danger: #f87171;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* GRID BACKGROUND */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(232,255,71,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(232,255,71,0.03) 1px, transparent 1px);
+    background-size: 48px 48px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  .container {
+    position: relative;
+    z-index: 1;
+    max-width: 900px;
+    margin: 0 auto;
+    padding: 40px 24px 80px;
+  }
+
+  /* HEADER */
+  header {
+    display: flex;
+    align-items: flex-end;
+    gap: 16px;
+    margin-bottom: 8px;
+  }
+
+  .logo {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: clamp(48px, 8vw, 80px);
+    letter-spacing: 2px;
+    line-height: 1;
+    color: var(--accent);
+    text-shadow: 0 0 40px rgba(232,255,71,0.3);
+  }
+
+  .logo span {
+    color: var(--accent2);
+  }
+
+  .tagline {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    margin-bottom: 12px;
+  }
+
+  .divider {
+    height: 1px;
+    background: linear-gradient(90deg, var(--accent), transparent);
+    margin-bottom: 40px;
+  }
+
+  /* FORM */
+  .form-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 16px;
+  }
+
+  .form-grid-bottom {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 16px;
+    margin-bottom: 24px;
+  }
+
+  @media (max-width: 600px) {
+    .form-grid, .form-grid-bottom { grid-template-columns: 1fr; }
+  }
+
+  .field {
+    display: flex;
+    flex-direction: column;
+    gap: 8px;
+  }
+
+  label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    color: var(--muted);
+  }
+
+  input, select {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 15px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    outline: none;
+    transition: border-color 0.2s, box-shadow 0.2s;
+    appearance: none;
+    -webkit-appearance: none;
+  }
+
+  input:focus, select:focus {
+    border-color: var(--accent);
+    box-shadow: 0 0 0 2px rgba(232,255,71,0.12);
+  }
+
+  input::placeholder { color: var(--muted); }
+
+  select {
+    background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='8' viewBox='0 0 12 8'%3E%3Cpath d='M1 1l5 5 5-5' stroke='%236b7280' stroke-width='1.5' fill='none' stroke-linecap='round'/%3E%3C/svg%3E");
+    background-repeat: no-repeat;
+    background-position: right 14px center;
+    padding-right: 36px;
+    cursor: pointer;
+  }
+
+  select option { background: #1a1c1e; }
+
+  /* VALIDATION STATES */
+  input.invalid {
+    border-color: var(--danger) !important;
+    box-shadow: 0 0 0 2px rgba(248,113,113,0.18) !important;
+    background: rgba(248,113,113,0.05);
+  }
+  input.valid {
+    border-color: var(--good) !important;
+    box-shadow: 0 0 0 2px rgba(74,222,128,0.1) !important;
+  }
+
+  .field-error {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--danger);
+    letter-spacing: 0.5px;
+    margin-top: -4px;
+    min-height: 16px;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  .field-hint {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    color: var(--warn);
+    letter-spacing: 0.5px;
+    margin-top: -4px;
+    min-height: 16px;
+    animation: fadeIn 0.2s ease;
+  }
+
+  @keyframes fadeIn { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+
+  /* AUTOCOMPLETE DROPDOWN */
+  .autocomplete-wrapper {
+    position: relative;
+  }
+
+  .autocomplete-list {
+    position: absolute;
+    top: calc(100% + 4px);
+    left: 0;
+    right: 0;
+    background: #1c1f21;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    max-height: 200px;
+    overflow-y: auto;
+    z-index: 100;
+    box-shadow: 0 8px 24px rgba(0,0,0,0.5);
+    display: none;
+  }
+
+  .autocomplete-list.open { display: block; }
+
+  .autocomplete-item {
+    padding: 10px 14px;
+    font-size: 14px;
+    cursor: pointer;
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    transition: background 0.1s;
+  }
+
+  .autocomplete-item:hover, .autocomplete-item.active {
+    background: rgba(232,255,71,0.08);
+    color: var(--accent);
+  }
+
+  .autocomplete-item .match-score {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    color: var(--muted);
+  }
+
+  .autocomplete-item.suggestion .match-score {
+    color: var(--warn);
+  }
+
+  /* VALIDATION BANNER */
+  .validation-banner {
+    background: rgba(248,113,113,0.08);
+    border: 1px solid rgba(248,113,113,0.3);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-bottom: 20px;
+    display: none;
+    animation: fadeIn 0.25s ease;
+  }
+
+  .validation-banner.show { display: block; }
+
+  .validation-banner .banner-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    color: var(--danger);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .validation-banner .banner-body {
+    font-size: 13px;
+    color: #e8e9eb;
+    line-height: 1.6;
+  }
+
+  .validation-banner .banner-body strong { color: var(--accent); }
+
+  /* ── OWNERSHIP PANEL ─────────────────────────────────────── */
+  .ownership-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .ownership-panel-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+  }
+
+  .ownership-tabs {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 0;
+  }
+
+  .ownership-tab {
+    flex: 1;
+    padding: 10px 14px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    text-align: center;
+  }
+
+  .ownership-tab.active {
+    background: rgba(232,255,71,0.1);
+    border-color: var(--accent);
+    color: var(--accent);
+    font-weight: 500;
+  }
+
+  .ownership-tab:hover:not(.active) {
+    border-color: #3a3d40;
+    color: var(--text);
+  }
+
+  /* ── MAINTENANCE HISTORY TOGGLES ─────────────────────────── */
+  .history-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 16px;
+    display: none;
+  }
+
+  .history-panel.show { display: block; }
+
+  .history-panel-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 6px;
+  }
+
+  .history-subtitle {
+    font-size: 12px;
+    color: var(--muted);
+    margin-bottom: 16px;
+    line-height: 1.5;
+  }
+
+  .toggle-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 10px;
+  }
+
+  @media (max-width: 600px) { .toggle-grid { grid-template-columns: 1fr; } }
+
+  .toggle-row {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    background: #0d0e0f;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 10px 14px;
+    gap: 12px;
+  }
+
+  .toggle-label {
+    font-size: 13px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .toggle-label small {
+    display: block;
+    font-size: 10px;
+    color: var(--muted);
+    margin-top: 2px;
+    font-family: 'DM Mono', monospace;
+  }
+
+  .toggle-switch {
+    position: relative;
+    width: 40px;
+    height: 22px;
+    flex-shrink: 0;
+  }
+
+  .toggle-switch input { opacity: 0; width: 0; height: 0; }
+
+  .toggle-slider {
+    position: absolute;
+    inset: 0;
+    background: #2a2d30;
+    border-radius: 22px;
+    cursor: pointer;
+    transition: 0.2s;
+  }
+
+  .toggle-slider::before {
+    content: '';
+    position: absolute;
+    width: 16px;
+    height: 16px;
+    left: 3px;
+    top: 3px;
+    background: var(--muted);
+    border-radius: 50%;
+    transition: 0.2s;
+  }
+
+  .toggle-switch input:checked + .toggle-slider { background: rgba(74,222,128,0.25); }
+  .toggle-switch input:checked + .toggle-slider::before {
+    transform: translateX(18px);
+    background: var(--good);
+  }
+
+  /* ── NEW OWNER ALERT CARD ─────────────────────────────────── */
+  .new-owner-alert {
+    background: rgba(255,107,53,0.08);
+    border: 1px solid rgba(255,107,53,0.3);
+    border-radius: 6px;
+    padding: 16px 18px;
+    margin-bottom: 20px;
+  }
+
+  .new-owner-alert .alert-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent2);
+    text-transform: uppercase;
+    margin-bottom: 6px;
+  }
+
+  .new-owner-alert .alert-body {
+    font-size: 13px;
+    color: var(--text);
+    line-height: 1.6;
+  }
+
+  /* ── SERVICE CARD DETAILS ─────────────────────────────────── */
+  .service-card .reason-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--accent2);
+    margin-top: 4px;
+    display: block;
+  }
+
+  .service-card.new-owner-item::after {
+    content: 'NEW OWNER';
+    position: absolute;
+    top: 8px;
+    right: 8px;
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    color: var(--accent2);
+    background: rgba(255,107,53,0.12);
+    border: 1px solid rgba(255,107,53,0.25);
+    padding: 2px 6px;
+    border-radius: 3px;
+  }
+
+  /* ── VIN LOOKUP ──────────────────────────────────────── */
+  .vin-panel {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 20px;
+    margin-bottom: 16px;
+  }
+
+  .vin-panel-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    text-transform: uppercase;
+    color: var(--muted);
+    margin-bottom: 14px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .vin-methods {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 14px;
+    flex-wrap: wrap;
+  }
+
+  .vin-method-btn {
+    flex: 1;
+    min-width: 120px;
+    padding: 10px 12px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--muted);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px;
+    cursor: pointer;
+    transition: all 0.2s;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 7px;
+  }
+
+  .vin-method-btn:hover { border-color: #3a3d40; color: var(--text); }
+  .vin-method-btn.active { background: rgba(232,255,71,0.08); border-color: var(--accent); color: var(--accent); }
+
+  .vin-input-area { display: none; }
+  .vin-input-area.show { display: block; }
+
+  .vin-text-row {
+    display: flex;
+    gap: 8px;
+    align-items: stretch;
+  }
+
+  .vin-text-input {
+    flex: 1;
+    background: #0d0e0f;
+    border: 1px solid var(--border);
+    color: var(--text);
+    font-family: 'DM Mono', monospace;
+    font-size: 16px;
+    letter-spacing: 3px;
+    padding: 12px 14px;
+    border-radius: 4px;
+    outline: none;
+    text-transform: uppercase;
+    transition: border-color 0.2s;
+  }
+
+  .vin-text-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px rgba(232,255,71,0.1); }
+  .vin-text-input.invalid { border-color: var(--danger); }
+  .vin-text-input.valid { border-color: var(--good); }
+
+  .vin-lookup-btn {
+    background: var(--accent);
+    color: #0d0e0f;
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 16px;
+    letter-spacing: 1px;
+    padding: 12px 20px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    white-space: nowrap;
+  }
+
+  .vin-lookup-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 16px rgba(232,255,71,0.2); }
+  .vin-lookup-btn:disabled { opacity: 0.5; cursor: not-allowed; transform: none; }
+
+  /* VIN result card */
+  .vin-result {
+    margin-top: 12px;
+    background: rgba(232,255,71,0.05);
+    border: 1px solid rgba(232,255,71,0.2);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .vin-result.show { display: block; }
+  .vin-result.error { background: rgba(248,113,113,0.05); border-color: rgba(248,113,113,0.2); }
+
+  .vin-result-title {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    text-transform: uppercase;
+    margin-bottom: 10px;
+  }
+
+  .vin-result.error .vin-result-title { color: var(--danger); }
+
+  .vin-result-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(160px, 1fr));
+    gap: 8px;
+    margin-bottom: 12px;
+  }
+
+  .vin-field {
+    background: #0d0e0f;
+    border: 1px solid var(--border);
+    border-radius: 4px;
+    padding: 8px 10px;
+  }
+
+  .vin-field-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-bottom: 3px;
+  }
+
+  .vin-field-value {
+    font-size: 14px;
+    font-weight: 500;
+    color: var(--text);
+  }
+
+  .vin-autofill-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    background: var(--accent);
+    color: #0d0e0f;
+    border: none;
+    border-radius: 4px;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.15s;
+  }
+
+  .vin-autofill-btn:hover { transform: translateY(-1px); box-shadow: 0 4px 12px rgba(232,255,71,0.2); }
+
+  /* Camera / Scanner area */
+  .vin-camera-area {
+    position: relative;
+    background: #000;
+    border-radius: 6px;
+    overflow: hidden;
+    min-height: 200px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    gap: 12px;
+  }
+
+  #vin-video {
+    width: 100%;
+    max-height: 280px;
+    object-fit: cover;
+    border-radius: 6px;
+    display: none;
+  }
+
+  .vin-scan-overlay {
+    position: absolute;
+    inset: 0;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    pointer-events: none;
+  }
+
+  .vin-scan-frame {
+    width: 85%;
+    height: 60px;
+    border: 2px solid var(--accent);
+    border-radius: 4px;
+    box-shadow: 0 0 0 9999px rgba(0,0,0,0.5);
+    position: relative;
+  }
+
+  .vin-scan-line {
+    position: absolute;
+    left: 0;
+    right: 0;
+    height: 2px;
+    background: var(--accent);
+    animation: scanLine 2s linear infinite;
+    opacity: 0.8;
+  }
+
+  @keyframes scanLine {
+    0% { top: 0; }
+    100% { top: 100%; }
+  }
+
+  .vin-camera-placeholder {
+    color: var(--muted);
+    font-size: 13px;
+    text-align: center;
+    padding: 20px;
+  }
+
+  .vin-camera-placeholder .cam-icon { font-size: 36px; margin-bottom: 8px; }
+
+  .vin-cam-btns {
+    display: flex;
+    gap: 8px;
+    margin-top: 10px;
+    flex-wrap: wrap;
+  }
+
+  .vin-cam-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 8px 16px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    color: var(--text);
+    cursor: pointer;
+    transition: all 0.15s;
+  }
+
+  .vin-cam-btn.primary { background: var(--accent); color: #0d0e0f; border-color: var(--accent); }
+  .vin-cam-btn:hover { border-color: var(--accent); color: var(--accent); }
+  .vin-cam-btn.primary:hover { opacity: 0.85; }
+
+  /* Photo upload area */
+  .vin-photo-drop {
+    border: 2px dashed var(--border);
+    border-radius: 6px;
+    padding: 32px 20px;
+    text-align: center;
+    cursor: pointer;
+    transition: border-color 0.2s;
+    position: relative;
+  }
+
+  .vin-photo-drop:hover, .vin-photo-drop.dragover {
+    border-color: var(--accent);
+    background: rgba(232,255,71,0.03);
+  }
+
+  .vin-photo-drop input[type=file] {
+    position: absolute;
+    inset: 0;
+    opacity: 0;
+    cursor: pointer;
+    width: 100%;
+    height: 100%;
+  }
+
+  .vin-photo-icon { font-size: 32px; margin-bottom: 8px; }
+  .vin-photo-text { font-size: 13px; color: var(--muted); }
+  .vin-photo-text strong { color: var(--accent); }
+
+  #vin-photo-preview {
+    width: 100%;
+    border-radius: 4px;
+    max-height: 200px;
+    object-fit: contain;
+    margin-top: 10px;
+    display: none;
+    background: #000;
+  }
+
+  .vin-status {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 8px;
+    min-height: 18px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .vin-status.loading { color: var(--accent); }
+  .vin-status.success { color: var(--good); }
+  .vin-status.error { color: var(--danger); }
+
+  .vin-spinner {
+    width: 12px; height: 12px;
+    border: 2px solid rgba(232,255,71,0.2);
+    border-top-color: var(--accent);
+    border-radius: 50%;
+    animation: spin 0.8s linear infinite;
+    display: inline-block;
+  }
+
+  @keyframes spin { to { transform: rotate(360deg); } }
+
+  .btn {
+    background: var(--accent);
+    color: #0d0e0f;
+    border: none;
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 2px;
+    padding: 14px 32px;
+    border-radius: 4px;
+    cursor: pointer;
+    transition: transform 0.15s, box-shadow 0.15s, background 0.15s;
+    width: 100%;
+  }
+
+  .btn:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 8px 32px rgba(232,255,71,0.25);
+  }
+
+  .btn:active { transform: translateY(0); }
+
+  /* RESULTS */
+  #results {
+    display: none;
+    animation: slideUp 0.4s cubic-bezier(0.16, 1, 0.3, 1);
+  }
+
+  @keyframes slideUp {
+    from { opacity: 0; transform: translateY(24px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  .results-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 24px;
+    padding-top: 40px;
+    border-top: 1px solid var(--border);
+  }
+
+  .vehicle-badge {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 28px;
+    color: var(--accent);
+    letter-spacing: 1px;
+  }
+
+  .mileage-badge {
+    font-family: 'DM Mono', monospace;
+    font-size: 13px;
+    color: var(--accent2);
+    background: rgba(255,107,53,0.12);
+    border: 1px solid rgba(255,107,53,0.25);
+    padding: 4px 10px;
+    border-radius: 20px;
+  }
+
+  .services-grid {
+    display: grid;
+    gap: 12px;
+  }
+
+  .service-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 18px 20px;
+    display: grid;
+    grid-template-columns: auto 1fr auto;
+    align-items: center;
+    gap: 16px;
+    transition: border-color 0.2s, transform 0.2s;
+    position: relative;
+    overflow: hidden;
+  }
+
+  .service-card::before {
+    content: '';
+    position: absolute;
+    left: 0;
+    top: 0;
+    bottom: 0;
+    width: 3px;
+  }
+
+  .service-card.urgent::before { background: var(--danger); }
+  .service-card.soon::before { background: var(--warn); }
+  .service-card.ok::before { background: var(--good); }
+
+  .service-card:hover {
+    border-color: #3a3d40;
+    transform: translateX(4px);
+  }
+
+  .status-dot {
+    width: 10px;
+    height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+  .urgent .status-dot { background: var(--danger); box-shadow: 0 0 8px var(--danger); }
+  .soon .status-dot { background: var(--warn); box-shadow: 0 0 8px var(--warn); }
+  .ok .status-dot { background: var(--good); box-shadow: 0 0 8px var(--good); }
+
+  .service-info .name {
+    font-weight: 500;
+    font-size: 15px;
+    margin-bottom: 4px;
+  }
+
+  .service-info .desc {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.5;
+  }
+
+  .service-tag {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    padding: 4px 10px;
+    border-radius: 4px;
+    white-space: nowrap;
+    flex-shrink: 0;
+  }
+
+  .urgent .service-tag { color: var(--danger); background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.2); }
+  .soon .service-tag { color: var(--warn); background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.2); }
+  .ok .service-tag { color: var(--good); background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.2); }
+
+  .summary-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 24px;
+    flex-wrap: wrap;
+  }
+
+  .summary-pill {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 1px;
+    padding: 6px 14px;
+    border-radius: 20px;
+    display: flex;
+    align-items: center;
+    gap: 6px;
+  }
+
+  .pill-urgent { background: rgba(248,113,113,0.1); border: 1px solid rgba(248,113,113,0.3); color: var(--danger); }
+  .pill-soon { background: rgba(250,204,21,0.1); border: 1px solid rgba(250,204,21,0.3); color: var(--warn); }
+  .pill-ok { background: rgba(74,222,128,0.1); border: 1px solid rgba(74,222,128,0.3); color: var(--good); }
+
+  .section-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 3px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin: 28px 0 12px;
+  }
+
+  .disclaimer {
+    font-size: 11px;
+    color: var(--muted);
+    margin-top: 32px;
+    padding-top: 16px;
+    border-top: 1px solid var(--border);
+    line-height: 1.6;
+  }
+
+  /* ── RESULTS TABS ─────────────────────────────────────── */
+  .results-tabs {
+    display: flex;
+    gap: 4px;
+    margin-bottom: 28px;
+    border-bottom: 1px solid var(--border);
+    padding-bottom: 0;
+  }
+
+  .results-tab {
+    font-family: 'DM Mono', monospace;
+    font-size: 11px;
+    letter-spacing: 2px;
+    text-transform: uppercase;
+    padding: 10px 18px;
+    border: none;
+    background: transparent;
+    color: var(--muted);
+    cursor: pointer;
+    border-bottom: 2px solid transparent;
+    margin-bottom: -1px;
+    transition: color 0.2s, border-color 0.2s;
+  }
+
+  .results-tab:hover { color: var(--text); }
+
+  .results-tab.active {
+    color: var(--accent);
+    border-bottom-color: var(--accent);
+  }
+
+  .results-tab-panel { display: none; }
+  .results-tab-panel.active { display: block; }
+
+  /* ── INSPECTION CHECKLIST ─────────────────────────────── */
+  .inspect-section {
+    margin-bottom: 28px;
+  }
+
+  .inspect-section-header {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 12px;
+    cursor: pointer;
+    user-select: none;
+  }
+
+  .inspect-section-icon {
+    font-size: 18px;
+    width: 32px;
+    text-align: center;
+  }
+
+  .inspect-section-title {
+    font-family: 'Bebas Neue', sans-serif;
+    font-size: 20px;
+    letter-spacing: 1px;
+    color: var(--text);
+    flex: 1;
+  }
+
+  .inspect-section-count {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    color: var(--muted);
+  }
+
+  .inspect-chevron {
+    font-size: 10px;
+    color: var(--muted);
+    transition: transform 0.2s;
+  }
+
+  .inspect-section.collapsed .inspect-chevron { transform: rotate(-90deg); }
+  .inspect-section.collapsed .inspect-items { display: none; }
+
+  .inspect-items {
+    display: grid;
+    gap: 8px;
+  }
+
+  .inspect-item {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    padding: 14px 16px;
+    display: grid;
+    grid-template-columns: 20px 1fr;
+    gap: 12px;
+    align-items: start;
+    transition: border-color 0.15s;
+    cursor: pointer;
+  }
+
+  .inspect-item:hover { border-color: #3a3d40; }
+
+  .inspect-item.checked {
+    border-color: rgba(74,222,128,0.3);
+    background: rgba(74,222,128,0.04);
+  }
+
+  .inspect-item.flagged {
+    border-color: rgba(248,113,113,0.3);
+    background: rgba(248,113,113,0.04);
+  }
+
+  .inspect-item.warning {
+    border-color: rgba(250,204,21,0.3);
+    background: rgba(250,204,21,0.04);
+  }
+
+  .inspect-checkbox {
+    width: 18px;
+    height: 18px;
+    border-radius: 3px;
+    border: 1px solid var(--border);
+    background: transparent;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-shrink: 0;
+    margin-top: 1px;
+    transition: all 0.15s;
+    font-size: 11px;
+  }
+
+  .inspect-item.checked .inspect-checkbox {
+    background: var(--good);
+    border-color: var(--good);
+    color: #0d0e0f;
+  }
+
+  .inspect-item.flagged .inspect-checkbox {
+    background: var(--danger);
+    border-color: var(--danger);
+    color: #0d0e0f;
+  }
+
+  .inspect-item.warning .inspect-checkbox {
+    background: var(--warn);
+    border-color: var(--warn);
+    color: #0d0e0f;
+  }
+
+  .inspect-content {}
+
+  .inspect-name {
+    font-weight: 500;
+    font-size: 14px;
+    margin-bottom: 4px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .inspect-priority {
+    font-family: 'DM Mono', monospace;
+    font-size: 8px;
+    letter-spacing: 1px;
+    padding: 2px 6px;
+    border-radius: 3px;
+    text-transform: uppercase;
+  }
+
+  .priority-safety { background: rgba(248,113,113,0.15); color: var(--danger); }
+  .priority-important { background: rgba(250,204,21,0.15); color: var(--warn); }
+  .priority-routine { background: rgba(74,222,128,0.1); color: var(--good); }
+
+  .inspect-detail {
+    font-size: 12px;
+    color: var(--muted);
+    line-height: 1.6;
+    margin-bottom: 6px;
+  }
+
+  .inspect-what-to-look {
+    font-size: 11px;
+    color: var(--text);
+    line-height: 1.6;
+    background: rgba(255,255,255,0.03);
+    border-left: 2px solid var(--border);
+    padding: 6px 10px;
+    margin-top: 6px;
+    border-radius: 0 3px 3px 0;
+  }
+
+  .inspect-what-to-look strong {
+    color: var(--accent2);
+    font-size: 10px;
+    font-family: 'DM Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+    display: block;
+    margin-bottom: 3px;
+  }
+
+  .inspect-flag-btns {
+    display: flex;
+    gap: 6px;
+    margin-top: 8px;
+  }
+
+  .inspect-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 9px;
+    letter-spacing: 1px;
+    padding: 4px 10px;
+    border-radius: 4px;
+    border: 1px solid var(--border);
+    background: transparent;
+    cursor: pointer;
+    transition: all 0.15s;
+    text-transform: uppercase;
+  }
+
+  .inspect-btn-ok { color: var(--good); border-color: rgba(74,222,128,0.3); }
+  .inspect-btn-ok:hover, .inspect-item.checked .inspect-btn-ok {
+    background: rgba(74,222,128,0.15); border-color: var(--good);
+  }
+
+  .inspect-btn-flag { color: var(--danger); border-color: rgba(248,113,113,0.3); }
+  .inspect-btn-flag:hover, .inspect-item.flagged .inspect-btn-flag {
+    background: rgba(248,113,113,0.15); border-color: var(--danger);
+  }
+
+  .inspect-btn-warn { color: var(--warn); border-color: rgba(250,204,21,0.3); }
+  .inspect-btn-warn:hover, .inspect-item.warning .inspect-btn-warn {
+    background: rgba(250,204,21,0.15); border-color: var(--warn);
+  }
+
+  .inspect-summary-bar {
+    display: flex;
+    gap: 12px;
+    margin-bottom: 20px;
+    padding: 14px 18px;
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 6px;
+    flex-wrap: wrap;
+    align-items: center;
+  }
+
+  .inspect-summary-label {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 2px;
+    color: var(--muted);
+    text-transform: uppercase;
+    margin-right: 4px;
+  }
+
+  .inspect-stat {
+    font-family: 'DM Mono', monospace;
+    font-size: 12px;
+    display: flex;
+    align-items: center;
+    gap: 5px;
+  }
+
+  .inspect-progress {
+    height: 3px;
+    background: var(--border);
+    border-radius: 2px;
+    flex: 1;
+    min-width: 80px;
+    overflow: hidden;
+  }
+
+  .inspect-progress-fill {
+    height: 100%;
+    background: var(--accent);
+    border-radius: 2px;
+    transition: width 0.3s;
+    width: 0%;
+  }
+
+  .inspect-print-btn {
+    font-family: 'DM Mono', monospace;
+    font-size: 10px;
+    letter-spacing: 1px;
+    padding: 6px 14px;
+    background: rgba(232,255,71,0.08);
+    border: 1px solid rgba(232,255,71,0.2);
+    color: var(--accent);
+    border-radius: 4px;
+    cursor: pointer;
+    transition: all 0.15s;
+    margin-left: auto;
+  }
+
+  .inspect-print-btn:hover { background: rgba(232,255,71,0.15); }
+</style>
+</head>
+<body>
+<div class="container">
+  <header>
+    <div>
+      <div class="logo">AUTO<span>ADVISOR</span></div>
+    </div>
+  </header>
+  <p class="tagline">Vehicle Maintenance Intelligence System</p>
+  <div class="divider"></div>
+
+  <!-- ── VIN LOOKUP PANEL ──────────────────────────────────────────── -->
+  <div class="vin-panel">
+    <div class="vin-panel-title">
+      <span>🔎</span> VIN Lookup — Auto-Fill Vehicle Info
+    </div>
+
+    <div class="vin-methods">
+      <button class="vin-method-btn active" id="vin-btn-type" onclick="setVinMethod('type')">
+        ⌨️ Type VIN
+      </button>
+      <button class="vin-method-btn" id="vin-btn-photo" onclick="setVinMethod('photo')">
+        📷 Take / Upload Photo
+      </button>
+      <button class="vin-method-btn" id="vin-btn-scan" onclick="setVinMethod('scan')">
+        📱 Live Camera Scan
+      </button>
+    </div>
+
+    <!-- TYPE VIN -->
+    <div class="vin-input-area show" id="vin-area-type">
+      <div class="vin-text-row">
+        <input class="vin-text-input" id="vin-input" maxlength="17" placeholder="e.g. 1HGBH41JXMN109186"
+          oninput="onVinInput(this)" onkeydown="if(event.key==='Enter') lookupVin()">
+        <button class="vin-lookup-btn" id="vin-lookup-btn" onclick="lookupVin()" disabled>LOOK UP →</button>
+      </div>
+      <div class="vin-status" id="vin-type-status">Enter your 17-character VIN — found on dashboard (driver side), door jamb sticker, or registration.</div>
+    </div>
+
+    <!-- PHOTO UPLOAD -->
+    <div class="vin-input-area" id="vin-area-photo">
+      <div class="vin-photo-drop" id="vin-drop-zone"
+        ondragover="event.preventDefault();this.classList.add('dragover')"
+        ondragleave="this.classList.remove('dragover')"
+        ondrop="handleVinPhotoDrop(event)">
+        <input type="file" accept="image/*" capture="environment" onchange="handleVinPhotoFile(event)" id="vin-photo-input">
+        <div class="vin-photo-icon">📸</div>
+        <div class="vin-photo-text">
+          <strong>Tap to take a photo</strong> or drag & drop an image<br>
+          <span style="font-size:11px;">Point camera at VIN sticker on dashboard, door jamb, or title document</span>
+        </div>
+      </div>
+      <img id="vin-photo-preview" alt="VIN photo preview">
+      <div class="vin-status" id="vin-photo-status"></div>
+      <div class="vin-cam-btns" id="vin-photo-action-btns" style="display:none">
+        <button class="vin-cam-btn primary" onclick="extractVinFromPhoto()">🔍 Extract VIN from Image</button>
+        <button class="vin-cam-btn" onclick="resetVinPhoto()">✕ Clear</button>
+      </div>
+      <div id="vin-photo-fallback" style="display:none;margin-top:12px;background:rgba(232,255,71,0.05);border:1px solid rgba(232,255,71,0.15);border-radius:6px;padding:14px 16px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;">📋 Read VIN Manually</div>
+        <div style="font-size:12px;color:var(--muted);line-height:1.7;">
+          Look at your photo above and find the 17-character VIN, then:<br>
+          • <strong style="color:var(--text)">Dashboard</strong> — driver side, visible through windshield bottom<br>
+          • <strong style="color:var(--text)">Door Jamb</strong> — white sticker on driver door frame<br>
+          • <strong style="color:var(--text)">Engine Bay</strong> — metal plate near firewall<br>
+          • <strong style="color:var(--text)">Registration / Title</strong> — printed on document
+        </div>
+        <button class="vin-cam-btn primary" style="margin-top:10px;" onclick="setVinMethod('type');document.getElementById('vin-input').focus();">
+          ✏️ Type VIN Manually
+        </button>
+      </div>
+    </div>
+
+    <!-- LIVE CAMERA SCAN -->
+    <div class="vin-input-area" id="vin-area-scan">
+      <div class="vin-camera-area" id="vin-camera-area">
+        <video id="vin-video" autoplay playsinline muted></video>
+        <div class="vin-scan-overlay" id="vin-scan-overlay" style="display:none">
+          <div class="vin-scan-frame"><div class="vin-scan-line"></div></div>
+        </div>
+        <div class="vin-camera-placeholder" id="vin-cam-placeholder">
+          <div class="cam-icon">📱</div>
+          <div>Live camera scan reads VIN barcodes and stickers in real time</div>
+          <div style="font-size:11px;margin-top:6px;color:#444">Works best in good lighting — point at barcode on door jamb or dashboard</div>
+        </div>
+      </div>
+      <div class="vin-cam-btns">
+        <button class="vin-cam-btn primary" id="vin-start-cam-btn" onclick="startVinCamera()">▶ Start Camera</button>
+        <button class="vin-cam-btn" id="vin-stop-cam-btn" style="display:none" onclick="stopVinCamera()">■ Stop</button>
+        <button class="vin-cam-btn" id="vin-capture-btn" style="display:none" onclick="captureVinFrame()">📸 Capture Frame</button>
+      </div>
+      <div class="vin-status" id="vin-scan-status">Camera will scan for VIN barcode automatically (Chrome/Android). For other browsers, use Capture Frame → AI reads it.</div>
+      <div style="margin-top:8px;padding:10px 12px;background:var(--surface);border:1px solid var(--border);border-radius:4px;font-size:11px;color:var(--muted);line-height:1.6;">
+        <strong style="color:var(--text);font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;">📍 WHERE TO FIND YOUR VIN</strong><br>
+        <span style="color:var(--text)">Dashboard plate</span> — driver side, seen through windshield&nbsp;&nbsp;
+        <span style="color:var(--text)">Door jamb sticker</span> — white label, open driver door&nbsp;&nbsp;
+        <span style="color:var(--text)">Engine bay</span> — firewall or shock tower plate
+      </div>
+    </div>
+
+    <!-- VIN RESULT -->
+    <div class="vin-result" id="vin-result">
+      <div class="vin-result-title" id="vin-result-title">✓ Vehicle Identified</div>
+      <div class="vin-result-grid" id="vin-result-grid"></div>
+      <button class="vin-autofill-btn" onclick="autofillFromVin()">⬇ Auto-Fill All Fields</button>
+    </div>
+  </div>
+
+  <div id="validation-banner" class="validation-banner">
+    <div class="banner-title">⚠ Vehicle Not Recognized</div>
+    <div id="banner-body" class="banner-body"></div>
+  </div>
+
+  <!-- OWNERSHIP MODE TABS -->
+  <div class="ownership-panel">
+    <div class="ownership-panel-title">Vehicle Ownership Status</div>
+    <div class="ownership-tabs">
+      <button class="ownership-tab active" onclick="setOwnership('current')" id="tab-current">
+        ✓ I Own &amp; Maintain This Car
+      </button>
+      <button class="ownership-tab" onclick="setOwnership('new')" id="tab-new">
+        🔑 Just Bought / Unknown History
+      </button>
+    </div>
+  </div>
+
+  <div class="form-grid">
+    <div class="field">
+      <label>Year</label>
+      <input type="number" id="year" placeholder="e.g. 2018" min="1980" max="2026" oninput="validateYear()" onblur="validateYear()">
+      <div id="year-error" class="field-error"></div>
+    </div>
+    <div class="field">
+      <label>Make</label>
+      <div class="autocomplete-wrapper">
+        <input type="text" id="make" placeholder="e.g. Toyota" autocomplete="off"
+          oninput="onMakeInput()" onblur="onMakeBlur()" onfocus="onMakeFocus()">
+        <div id="make-list" class="autocomplete-list"></div>
+      </div>
+      <div id="make-error" class="field-error"></div>
+    </div>
+    <div class="field">
+      <label>Model</label>
+      <div class="autocomplete-wrapper">
+        <input type="text" id="model" placeholder="e.g. Camry" autocomplete="off"
+          oninput="onModelInput()" onblur="onModelBlur()" onfocus="onModelFocus()">
+        <div id="model-list" class="autocomplete-list"></div>
+      </div>
+      <div id="model-error" class="field-error"></div>
+    </div>
+  </div>
+  <div class="form-grid-bottom">
+    <div class="field">
+      <label>Current Mileage</label>
+      <input type="number" id="mileage" placeholder="e.g. 45000" min="0" oninput="validateMileage()" onblur="validateMileage()">
+      <div id="mileage-error" class="field-error"></div>
+    </div>
+    <div class="field">
+      <label>Engine Type</label>
+      <select id="engine">
+        <option value="gas">Gasoline</option>
+        <option value="diesel">Diesel</option>
+        <option value="hybrid">Hybrid</option>
+        <option value="electric">Electric / EV</option>
+      </select>
+    </div>
+  </div>
+  <div class="form-grid-bottom" style="margin-top:-8px;">
+    <div class="field">
+      <label>Drivetrain</label>
+      <select id="drivetrain">
+        <option value="2wd">2WD (FWD / RWD)</option>
+        <option value="awd">AWD (All-Wheel Drive)</option>
+        <option value="4wd">4WD / 4x4 (Part-Time)</option>
+        <option value="4wdfull">4WD (Full-Time)</option>
+      </select>
+    </div>
+    <div class="field">
+      <label>Primary Use</label>
+      <select id="usage">
+        <option value="normal">Normal / Daily Driving</option>
+        <option value="towing">Frequent Towing / Hauling</option>
+        <option value="offroad">Off-Road / Rough Terrain</option>
+        <option value="city">Mostly City / Stop-Go</option>
+        <option value="highway">Mostly Highway</option>
+      </select>
+    </div>
+  </div>
+
+  <!-- MAINTENANCE HISTORY TOGGLES (shown only for existing owners) -->
+  <div id="history-panel" class="history-panel show" style="display:block!important">
+    <div class="history-panel-title">Maintenance History — What Have You Kept Up With?</div>
+    <div class="history-subtitle">Toggle ON for services you know have been done. Leave OFF if unsure — we'll flag it as unknown and recommend it.</div>
+    <div style="margin-bottom:10px;display:flex;gap:8px;flex-wrap:wrap;">
+      <button onclick="setAllToggles(true)" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;padding:6px 14px;background:rgba(74,222,128,0.1);border:1px solid rgba(74,222,128,0.3);color:var(--good);border-radius:4px;cursor:pointer;">✓ ALL DONE</button>
+      <button onclick="setAllToggles(false)" style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:1px;padding:6px 14px;background:rgba(248,113,113,0.1);border:1px solid rgba(248,113,113,0.3);color:var(--danger);border-radius:4px;cursor:pointer;">✗ CLEAR ALL</button>
+    </div>
+    <div class="toggle-grid" id="toggle-grid">
+
+      <!-- ── FLUIDS ─────────────────────────────────────── -->
+      <div class="toggle-row">
+        <div class="toggle-label">Oil &amp; Filter Change
+          <small>Every 3,000–7,500 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-oil">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Transmission Fluid &amp; Filter
+          <small>Every 30,000–60,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-trans">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Brake Fluid Flush
+          <small>Every 25,000–45,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-brakefluid">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Coolant Flush &amp; Fill
+          <small>Every 50,000–150,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-coolant">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Transfer Case Fluid
+          <small>Every 30,000–45,000 mi (4WD/AWD)</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-transfercase">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Differential Fluid
+          <small>Every 30,000–50,000 mi (4WD/AWD)</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-diff">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- ── FILTERS ────────────────────────────────────── -->
+      <div class="toggle-row">
+        <div class="toggle-label">Engine Air Filter
+          <small>Every 15,000–45,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-airfilter">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Cabin Air Filter
+          <small>Every 15,000–22,500 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-cabinfilter">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Fuel Filter
+          <small>Every 20,000–30,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-fuel">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">PCV Valve
+          <small>Every 40,000–60,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-pcv">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- ── IGNITION / ENGINE ──────────────────────────── -->
+      <div class="toggle-row">
+        <div class="toggle-label">Spark Plugs
+          <small>Every 60,000–90,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-plugs">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Timing Belt / Chain Inspected
+          <small>Every 60,000–100,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-timing">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Serpentine / Accessory Drive Belt
+          <small>Every 60,000–150,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-serpentine">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Evap Control System
+          <small>Every 60,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-evap">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- ── BRAKES / SUSPENSION ───────────────────────── -->
+      <div class="toggle-row">
+        <div class="toggle-label">Brake System Inspection
+          <small>Every 15,000–25,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-brakes">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Shocks &amp; Struts Inspected
+          <small>Every 40,000–60,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-shocks">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Ball Joints &amp; Tie Rods
+          <small>Every 50,000–80,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-balljoints">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- ── TIRES / WHEELS ────────────────────────────── -->
+      <div class="toggle-row">
+        <div class="toggle-label">Tire Rotations
+          <small>Every 5,000–7,500 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-tires">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">Wiper Blades Replaced
+          <small>Every 15,000 mi / annually</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-wipers">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+      <!-- ── ELECTRICAL ─────────────────────────────────── -->
+      <div class="toggle-row">
+        <div class="toggle-label">Battery Tested / Replaced
+          <small>Every 3–5 years / 45,000–70,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-battery">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+      <div class="toggle-row">
+        <div class="toggle-label">A/C System Serviced
+          <small>Every 50,000 mi</small>
+        </div>
+        <label class="toggle-switch">
+          <input type="checkbox" id="tog-ac">
+          <span class="toggle-slider"></span>
+        </label>
+      </div>
+
+    </div>
+  </div>
+
+  <button class="btn" onclick="analyze()">ANALYZE VEHICLE →</button>
+
+  <div id="results"></div>
+</div>
+
+<script>
+  function formatMiles(n) {
+    return n.toLocaleString();
+  }
+
+  // Returns status based on how close/past you are to a service interval.
+  // Logic:
+  //   - If mileage hasn't reached the first checkpoint yet: only flag 'soon' when close, else 'ok'
+  //   - If exactly on a checkpoint: 'urgent'
+  //   - If within 15% past a checkpoint: 'urgent' (just missed it)
+  //   - If more than 15% past a checkpoint: treat as ok until approaching the next one
+  // confirmed = true means customer has toggled this service as done.
+  // When confirmed, we trust them: treat the last checkpoint as "just serviced"
+  // and only warn/flag based on distance to the NEXT due point.
+  // When confirmed = false (unknown history), any miles past a checkpoint = urgent.
+  function intervalStatus(mileage, interval, warnWindow, confirmed = false) {
+    const lastDue = Math.floor(mileage / interval) * interval;
+    const milesSinceDue = mileage - lastDue;
+    const nextDue = lastDue + interval;
+    const milesToNext = nextDue - mileage;
+    const hasHitFirstInterval = mileage >= interval;
+
+    let status;
+    if (!hasHitFirstInterval) {
+      // Haven't reached first interval yet — approaching only
+      status = milesToNext <= warnWindow ? 'soon' : 'ok';
+    } else if (confirmed) {
+      // Customer confirmed service is up to date.
+      // Whether milesSinceDue is 0 or more doesn't matter — they said it's done.
+      // Just count forward from current position toward the next due point.
+      status = milesToNext <= warnWindow ? 'soon' : 'ok';
+    } else {
+      // No confirmation — any miles at or past a checkpoint = urgent
+      status = 'urgent';
+    }
+    return { status, nextDue, milesSinceDue, milesToNext };
+  }
+
+  function getServices(mileage, engineType, drivetrain, usage, ownership, history, profile) {
+    const services = [];
+
+    // Severity multiplier: towing/city/offroad = severe service (shorter intervals)
+    const severe = (usage === 'towing' || usage === 'offroad' || usage === 'city');
+    const has4wd = (drivetrain === '4wd' || drivetrain === '4wdfull');
+    const hasAwd = (drivetrain === 'awd');
+    const isAllWheel = has4wd || hasAwd;
+
+    // Profile helper — use vehicle-specific interval if available, else default
+    const p = profile ? profile.intervals : {};
+    const pi = (key, defaultVal) => p[key] !== undefined ? p[key] : defaultVal;
+
+    // Ownership & history flags
+    const isNewOwner = (ownership === 'new');
+    // history = object of booleans: { oil, tires, brakes, airfilter, trans, plugs, coolant, timing, serpentine, brakefluid, shocks, fuel }
+    // For new owners ALL history is unknown. For existing owners, use toggle state.
+    // For new owners, we use whatever toggles THEY set (maybe they did an oil change yesterday)
+    const hist = history;
+
+    // Note: history confirmation is now passed directly into intervalStatus() as the
+    // 'confirmed' parameter. Toggled-ON = treat as maintained. Toggled-OFF = flag as urgent past due.
+
+    if (engineType !== 'electric') {
+      // Oil change — severe service shortens interval
+      // Use vehicle-specific profile interval if available
+      const oilInterval = engineType === 'diesel' ? 7500 : pi('oil', 5000);
+      const { status: oilStatus, nextDue: oilDue } = intervalStatus(mileage, oilInterval, oilInterval * 0.1, hist.oil);
+      const oilFinal = oilStatus;
+      const oilUnknown = !hist.oil && mileage >= oilInterval;
+      services.push({
+        name: engineType === 'diesel' ? 'Diesel Engine Oil & Filter' : 'Engine Oil & Filter Change',
+        desc: `Interval: every ${formatMiles(oilInterval)} miles. Next due around ${formatMiles(oilDue)} miles.${oilUnknown ? ' ⚠ No service history on file — change immediately to be safe.' : ''}`,
+        status: oilFinal,
+        tag: oilFinal === 'urgent' ? (oilUnknown ? 'Unknown History' : 'Due Now') : oilFinal === 'soon' ? 'Due Soon' : 'On Track',
+        priority: oilFinal === 'urgent' ? 0 : oilFinal === 'soon' ? 1 : 4,
+        newOwner: oilUnknown
+      });
+    }
+
+    // Tire rotation — with history and mileage-band logic
+    const tireInterval = pi('tires', 7500);
+    const { status: tireStatusRaw, nextDue: tireDue } = intervalStatus(mileage, tireInterval, tireInterval * 0.1, hist.tires);
+    // If customer never rotated (history off) AND at high mileage, escalate
+    const tireNeverRotated = !hist.tires && mileage >= tireInterval;
+    let tireStatus = tireStatusRaw;
+    let tireDesc = '';
+    let tireTag = '';
+
+    if (tireNeverRotated && mileage >= 50000) {
+      tireStatus = 'urgent';
+      tireDesc = `At ${formatMiles(mileage)} miles with NO rotation history, uneven tire wear is almost certain. Front tires wear 2–3x faster than rear on FWD vehicles. Immediate inspection and rotation required — tires may already be dangerously uneven. Have tread depth checked on all 4 corners.`;
+      tireTag = 'Inspect Immediately';
+    } else if (tireNeverRotated && mileage >= 25000) {
+      tireStatus = 'urgent';
+      tireDesc = `No tire rotation history with ${formatMiles(mileage)} miles on the odometer. Significant uneven wear is likely. Rotate now and have a tech measure tread depth on all 4 tires — if difference exceeds 2/32", replacement may be needed.`;
+      tireTag = 'Overdue — Rotate Now';
+    } else if (tireNeverRotated && mileage >= tireInterval) {
+      tireStatus = 'urgent';
+      tireDesc = `No confirmed tire rotation on file. At ${formatMiles(mileage)} miles, at least ${Math.floor(mileage/tireInterval)} rotation${Math.floor(mileage/tireInterval)>1?'s':''} should have been done. Schedule a rotation immediately.`;
+      tireTag = 'No History — Rotate Now';
+    } else {
+      const missedRotations = Math.floor(mileage / tireInterval);
+      tireDesc = `Rotate tires every ${formatMiles(tireInterval)} miles for even wear. At ${formatMiles(mileage)} miles, approximately ${missedRotations} rotation${missedRotations!==1?'s':''} should have been performed${hist.tires ? ' — history confirmed ✓' : ''}. Next at ${formatMiles(tireDue)} miles.`;
+      tireTag = tireStatus === 'urgent' ? 'Due Now' : tireStatus === 'soon' ? 'Due Soon' : 'On Track';
+    }
+
+    services.push({
+      name: 'Tire Rotation & Tread Inspection',
+      desc: tireDesc,
+      status: tireStatus,
+      tag: tireTag,
+      priority: tireStatus === 'urgent' ? 0 : tireStatus === 'soon' ? 1 : 5,
+      newOwner: tireNeverRotated
+    });
+
+    // Cabin air filter (every 22,500 per Silverado manual)
+    const cabinInterval = 22500;
+    const { status: cabinStatus, nextDue: cabinDue } = intervalStatus(mileage, cabinInterval, cabinInterval * 0.1, hist.cabinfilter);
+    // Cabin filter doesn't have its own toggle — treat as "air filter" toggle
+    const cabinFinal = cabinStatus;
+    const cabinUnknown = !hist.cabinfilter && mileage >= cabinInterval;
+    services.push({
+      name: 'Cabin Air Filter',
+      desc: `Replace every ${formatMiles(cabinInterval)} miles or every 2 years. Keeps interior air clean and HVAC efficient. Next at ${formatMiles(cabinDue)} miles.${cabinUnknown ? ' ⚠ Filter may be clogged — unknown history.' : ''}`,
+      status: cabinFinal,
+      tag: cabinFinal === 'urgent' ? (cabinUnknown ? 'Unknown History' : 'Due Now') : cabinFinal === 'soon' ? 'Due Soon' : 'On Track',
+      priority: cabinFinal === 'urgent' ? 0 : cabinFinal === 'soon' ? 2 : 7,
+      newOwner: cabinUnknown
+    });
+
+    // Air filter
+    const airInterval = 45000;
+    const { status: airStatus, nextDue: airDue } = intervalStatus(mileage, airInterval, airInterval * 0.1, hist.airfilter);
+    if (engineType !== 'electric') {
+      const airFinal = airStatus;
+      const airUnknown = !hist.airfilter && mileage >= airInterval;
+      services.push({
+        name: 'Engine Air Filter',
+        desc: `Replace every ${formatMiles(airInterval)} miles or every 4 years. Dirty filters reduce fuel economy. Next at ${formatMiles(airDue)} miles.${airUnknown ? ' ⚠ No filter history — a clogged filter costs 10–15% in fuel economy.' : ''}`,
+        status: airFinal,
+        tag: airFinal === 'urgent' ? (airUnknown ? 'Unknown History' : 'Due Now') : airFinal === 'soon' ? 'Due Soon' : 'On Track',
+        priority: airFinal === 'urgent' ? 0 : airFinal === 'soon' ? 2 : 6,
+        newOwner: airUnknown
+      });
+    }
+
+    // Brake inspection — city/towing wears pads faster
+    const brakeInterval = severe ? pi('brakes', 15000) : pi('brakes', 25000);
+    const { status: brakeStatus, nextDue: brakeDue } = intervalStatus(mileage, brakeInterval, brakeInterval * 0.1, hist.brakes);
+    const brakeFinal = brakeStatus;
+    const brakeUnknown = !hist.brakes && mileage >= brakeInterval;
+    services.push({
+      name: 'Brake System Inspection',
+      desc: `Inspect pads, rotors & fluid every ${formatMiles(brakeInterval)} miles${severe ? ' (severe/city use accelerates wear)' : ''}. Critical safety system. Next at ${formatMiles(brakeDue)} miles.${brakeUnknown ? ' ⚠ No brake inspection history — at this mileage brake pads may be dangerously worn. Do not delay.' : ''}`,
+      status: brakeFinal,
+      tag: brakeFinal === 'urgent' ? (brakeUnknown ? 'Unknown — Inspect Now' : 'Inspect Now') : brakeFinal === 'soon' ? 'Due Soon' : 'On Track',
+      priority: brakeFinal === 'urgent' ? 0 : brakeFinal === 'soon' ? 1 : 5,
+      newOwner: brakeUnknown
+    });
+
+    // Transmission fluid — severe service (towing/city) shortens interval
+    if (engineType !== 'electric') {
+      const transInterval = severe ? pi('transSevere', 45000) : pi('trans', 97500);
+      const { status: transStatus, nextDue: transDue } = intervalStatus(mileage, transInterval, transInterval * 0.1, hist.trans);
+      const transFinal = transStatus;
+      const transUnknown = !hist.trans && mileage >= transInterval;
+      services.push({
+        name: 'Transmission Fluid & Filter',
+        desc: `Change every ${formatMiles(transInterval)} miles${severe ? ' (severe/towing use)' : ' (normal use)'}. Protects gears and extends transmission life. Next at ${formatMiles(transDue)} miles.${transUnknown ? ' ⚠ Unknown history — burnt transmission fluid causes irreversible damage. Inspect and change immediately.' : ''}`,
+        status: transFinal,
+        tag: transFinal === 'urgent' ? (transUnknown ? 'Unknown History' : 'Due Now') : transFinal === 'soon' ? 'Due Soon' : 'On Track',
+        priority: transFinal === 'urgent' ? 0 : transFinal === 'soon' ? 2 : 6,
+        newOwner: transUnknown
+      });
+    }
+
+    // Transfer case fluid — only for 4WD/AWD vehicles
+    // Per 2020 Silverado manual:
+    //   Normal: GVW under 8,600 lb = 90,000 mi | GVW over 8,600 lb = 45,000 mi
+    //   Severe: GVW under 8,600 lb = 45,000 mi | GVW over 8,600 lb = 22,500 mi
+    // Use 45,000 mi as default (conservative, covers most trucks under severe or heavy use)
+    if (engineType !== 'electric' && isAllWheel) {
+      const transferInterval = severe ? pi('transferCaseSevere', 45000) : pi('transferCase', 90000);
+      const { status: transferStatus, nextDue: transferDue } = intervalStatus(mileage, transferInterval, transferInterval * 0.1, hist.transfercase);
+      services.push({
+        name: 'Transfer Case Fluid',
+        desc: `Change every ${formatMiles(transferInterval)} miles${severe ? ' (severe service — manual specifies 45,000 mi for trucks under severe use)' : ' (normal service — 45,000 mi if GVW over 8,600 lb or under severe use)'}. Next at ${formatMiles(transferDue)} miles.`,
+        status: transferStatus,
+        tag: transferStatus === 'urgent' ? 'Due Now' : transferStatus === 'soon' ? 'Due Soon' : 'On Track',
+        priority: transferStatus === 'urgent' ? 0 : transferStatus === 'soon' ? 2 : 8
+      });
+    }
+
+    // Front/rear differential fluid — AWD and 4WD vehicles
+    if (engineType !== 'electric' && isAllWheel) {
+      const diffInterval = severe ? 30000 : 50000;
+      const { status: diffStatus, nextDue: diffDue } = intervalStatus(mileage, diffInterval, diffInterval * 0.1, hist.diff);
+      services.push({
+        name: 'Front & Rear Differential Fluid',
+        desc: `Change every ${formatMiles(diffInterval)} miles${severe ? ' (severe use — towing/off-road accelerates wear)' : ''}. Per manufacturer spec. Keeps ring and pinion gears protected. Next at ${formatMiles(diffDue)} miles.`,
+        status: diffStatus,
+        tag: diffStatus === 'urgent' ? 'Due Now' : diffStatus === 'soon' ? 'Due Soon' : 'On Track',
+        priority: diffStatus === 'urgent' ? 0 : diffStatus === 'soon' ? 2 : 8
+      });
+    }
+
+    // Evaporative control system (every 60k per manual)
+    if (engineType === 'gas' || engineType === 'diesel') {
+      const evapInterval = pi('evap', 45000);
+      const { status: evapStatus, nextDue: evapDue } = intervalStatus(mileage, evapInterval, evapInterval * 0.1, hist.evap);
+      services.push({
+        name: 'Evaporative Control System Inspection',
+        desc: `Inspect every ${formatMiles(evapInterval)} miles. Prevents fuel vapor leaks and emissions failures. Next at ${formatMiles(evapDue)} miles.`,
+        status: evapStatus,
+        tag: evapStatus === 'urgent' ? 'Inspect Now' : evapStatus === 'soon' ? 'Due Soon' : 'On Track',
+        priority: evapStatus === 'urgent' ? 0 : evapStatus === 'soon' ? 2 : 9
+      });
+    }
+
+    // Coolant flush (150k per manual)
+    if (engineType !== 'electric') {
+      const coolInterval = pi('coolant', 150000);
+      const { status: coolStatus, nextDue: coolDue } = intervalStatus(mileage, coolInterval, coolInterval * 0.08, hist.coolant);
+      const coolFinal = coolStatus; // flag from 50k if unknown
+      const coolUnknown = !hist.coolant && mileage >= 50000;
+      services.push({
+        name: 'Engine Cooling System Drain & Fill',
+        desc: `Drain and fill every ${formatMiles(coolInterval)} miles. Prevents corrosion and overheating. Next at ${formatMiles(coolDue)} miles.${coolUnknown ? ' ⚠ No coolant history — degraded coolant causes internal corrosion and overheating. Inspect and flush regardless of mileage.' : ''}`,
+        status: coolFinal,
+        tag: coolFinal === 'urgent' ? (coolUnknown ? 'Flush Now — Unknown History' : 'Due Now') : coolFinal === 'soon' ? 'Due Soon' : 'On Track',
+        priority: coolFinal === 'urgent' ? 0 : coolFinal === 'soon' ? 2 : 10,
+        newOwner: coolUnknown
+      });
+    }
+
+    // Spark plugs (90k standard, 60k turbo per manual)
+    if (engineType === 'gas') {
+      // Per 2020 Silverado manual:
+      // 2.7L Turbo (L4): 60,000 mi | Standard engines (V6/V8): 82,500 mi
+      // Since we don't know engine sub-type, use 60,000 as conservative default
+      const sparkIntervalTurbo = pi('sparkPlugs', 60000);
+      const sparkIntervalStd = pi('sparkPlugsStd', 82500);
+      const sparkInterval = sparkIntervalTurbo; // conservative — use shorter interval
+      const { status: sparkStatus, nextDue: sparkDue } = intervalStatus(mileage, sparkInterval, sparkInterval * 0.1, hist.plugs);
+      const sparkFinal = sparkStatus;
+      const sparkUnknown = !hist.plugs && mileage >= sparkInterval;
+      services.push({
+        name: 'Spark Plugs',
+        desc: `Replace every ${formatMiles(sparkIntervalTurbo)} miles (2.7L Turbo) or ${formatMiles(sparkIntervalStd)} miles (V6/V8 standard engines). Per 2020 Silverado manual. Next at ${formatMiles(sparkDue)} miles.${sparkUnknown ? ' ⚠ No plug history at this mileage — misfires and poor fuel economy likely.' : ''}`,
+        status: sparkFinal,
+        tag: sparkFinal === 'urgent' ? (sparkUnknown ? 'Unknown History' : 'Due Now') : sparkFinal === 'soon' ? 'Due Soon' : 'On Track',
+        priority: sparkFinal === 'urgent' ? 0 : sparkFinal === 'soon' ? 2 : 7,
+        newOwner: sparkUnknown
+      });
+    }
+
+    // Wiper blades (every 15k per manual)
+    const wiperInterval = pi('wipers', 15000);
+    const { status: wiperStatus, nextDue: wiperDue } = intervalStatus(mileage, wiperInterval, wiperInterval * 0.1, hist.wipers);
+    services.push({
+      name: 'Windshield Wiper Blades',
+      desc: `Replace every ${formatMiles(wiperInterval)} miles or when streaking begins. Next at ${formatMiles(wiperDue)} miles.`,
+      status: wiperStatus,
+      tag: wiperStatus === 'urgent' ? 'Replace Now' : wiperStatus === 'soon' ? 'Due Soon' : 'On Track',
+      priority: wiperStatus === 'urgent' ? 1 : wiperStatus === 'soon' ? 3 : 10
+    });
+
+    // Timing belt/chain
+    if (engineType === 'gas' || engineType === 'diesel') {
+      const timingInterval = 90000;
+      const timingStatus = mileage >= timingInterval * 0.95 ? 'urgent' : mileage >= timingInterval * 0.8 ? 'soon' : 'ok';
+      // Timing belt: use toggle (hist.timing) as the confirmed flag
+      // If confirmed, trust customer — count toward next interval
+      // If not confirmed and past due mileage, flag critical
+      const timingConfirmed = hist.timing;
+      const timingPastDue = mileage >= timingInterval;
+      const timingUnknown = !timingConfirmed && mileage >= 60000;
+      let timingFinal;
+      if (timingConfirmed) {
+        // Customer confirmed — use intervalStatus logic (never urgent just for mileage)
+        timingFinal = timingStatus === 'urgent' ? 'ok' : timingStatus;
+      } else {
+        timingFinal = timingPastDue ? 'urgent' : timingStatus;
+      }
+      services.push({
+        name: 'Timing Belt / Chain Inspection',
+        desc: `Inspect around ${formatMiles(timingInterval)} miles. Belt failure causes severe engine damage — an engine can be destroyed in seconds. ${timingConfirmed ? `Confirmed serviced ✓. Next inspection at ${formatMiles(timingInterval + timingInterval)} miles.` : mileage >= timingInterval ? 'You are past due — service immediately.' : `${formatMiles(timingInterval - mileage)} miles remaining.`}${timingUnknown ? ' ⚠ No timing belt history at ' + formatMiles(mileage) + ' miles. This is a critical safety item — have it inspected immediately.' : ''}`,
+        status: timingFinal,
+        tag: timingFinal === 'urgent' ? (timingUnknown ? 'Critical — Unknown History' : 'Critical') : timingFinal === 'soon' ? 'Plan Ahead' : 'On Track',
+        priority: timingFinal === 'urgent' ? 0 : timingFinal === 'soon' ? 1 : 8,
+        newOwner: timingUnknown
+      });
+    }
+
+    // Battery
+    if (engineType !== 'electric') {
+      const battConfirmed = hist.battery;
+      // If confirmed: cap at 'soon' max — customer knows battery is good
+      // If not confirmed: escalate to urgent at high mileage
+      const battStatus = battConfirmed
+        ? (mileage > 100000 ? 'soon' : 'ok')
+        : (mileage > 70000 ? 'urgent' : mileage > 45000 ? 'soon' : 'ok');
+      services.push({
+        name: 'Battery Test & Inspection',
+        desc: `Car batteries typically last 3–5 years / 40–60k miles. ${battConfirmed ? 'Battery confirmed tested/replaced ✓.' : mileage > 60000 ? 'High mileage vehicle — test battery condition now.' : 'Have tested at your next service visit.'}${!battConfirmed && mileage > 45000 ? ' ⚠ No battery history — have load-tested immediately.' : ''}`,
+        status: battStatus,
+        tag: battStatus === 'urgent' ? 'Unknown — Test Now' : battStatus === 'soon' ? 'Test Soon' : 'On Track',
+        priority: battStatus === 'urgent' ? 1 : battStatus === 'soon' ? 3 : 9,
+        newOwner: !battConfirmed && mileage > 45000
+      });
+    }
+
+    // EV-specific
+    if (engineType === 'electric' || engineType === 'hybrid') {
+      services.push({
+        name: 'High-Voltage Battery Health Check',
+        desc: `Run a battery health diagnostic every 25,000 miles or annually to monitor capacity degradation and cell balance.`,
+        status: mileage > 75000 ? 'soon' : 'ok',
+        tag: mileage > 75000 ? 'Check Soon' : 'Monitoring',
+        priority: mileage > 75000 ? 2 : 8
+      });
+
+      services.push({
+        name: 'Brake Fluid (Regenerative System)',
+        desc: `EVs/Hybrids use less mechanical braking but brake fluid still absorbs moisture. Flush every 2 years or ${formatMiles(40000)} miles.`,
+        status: mileage > 35000 ? 'soon' : 'ok',
+        tag: mileage > 35000 ? 'Due Soon' : 'On Track',
+        priority: mileage > 35000 ? 2 : 7
+      });
+    }
+
+    // Accessory drive belts — uses serpentine toggle (same belt system)
+    if (engineType !== 'electric') {
+      const beltInterval = 150000;
+      const beltConfirmed = hist.serpentine; // serpentine toggle covers accessory drive belt
+      let beltStatus;
+      if (beltConfirmed) {
+        // Confirmed done — just check proximity to next interval
+        const beltNextDue = (Math.floor(mileage / beltInterval) * beltInterval) + beltInterval;
+        const beltToNext = beltNextDue - mileage;
+        beltStatus = beltToNext <= beltInterval * 0.1 ? 'soon' : 'ok';
+      } else {
+        beltStatus = mileage >= beltInterval * 0.95 ? 'urgent' : mileage >= beltInterval * 0.8 ? 'soon' : 'ok';
+      }
+      services.push({
+        name: 'Accessory Drive Belt Inspection',
+        desc: `Visually inspect at ${formatMiles(beltInterval)} miles. Drives alternator, A/C compressor, and more. ${beltConfirmed ? 'Confirmed inspected ✓.' : mileage >= beltInterval ? 'Past due — inspect now.' : `${formatMiles(beltInterval - mileage)} miles remaining.`}`,
+        status: beltStatus,
+        tag: beltStatus === 'urgent' ? 'Inspect Now' : beltStatus === 'soon' ? 'Plan Ahead' : 'On Track',
+        priority: beltStatus === 'urgent' ? 1 : beltStatus === 'soon' ? 3 : 12
+      });
+    }
+
+    // ── FUEL FILTER ────────────────────────────────────────────────────────────
+    if (engineType === 'gas' || engineType === 'diesel') {
+      const fuelInterval = engineType === 'diesel' ? 15000 : (severe ? 20000 : 30000);
+      const { status: fuelStatus, nextDue: fuelDue } = intervalStatus(mileage, fuelInterval, fuelInterval * 0.1, hist.fuel);
+      const fuelFinal = fuelStatus;
+      const fuelUnknown = !hist.fuel && mileage >= fuelInterval;
+      services.push({
+        name: 'Fuel Filter',
+        desc: `Replace every ${formatMiles(fuelInterval)} miles${engineType === 'diesel' ? ' — diesel systems are highly sensitive to fuel contamination' : severe ? ' (shortened for severe/city driving)' : ''}. Next at ${formatMiles(fuelDue)} miles.${fuelUnknown ? ' ⚠ Unknown history — a clogged fuel filter causes hard starts, stalling, and fuel pump damage.' : ''}`,
+        status: fuelFinal,
+        tag: fuelFinal === 'urgent' ? (fuelUnknown ? 'Unknown History' : 'Replace Now') : fuelFinal === 'soon' ? 'Due Soon' : 'On Track',
+        priority: fuelFinal === 'urgent' ? 0 : fuelFinal === 'soon' ? 2 : 7,
+        newOwner: fuelUnknown
+      });
+    }
+
+    // ── PCV VALVE ───────────────────────────────────────────────────────────────
+    if (engineType === 'gas' || engineType === 'hybrid') {
+      const pcvInterval = severe ? 40000 : 60000;
+      const { status: pcvStatus, nextDue: pcvDue } = intervalStatus(mileage, pcvInterval, pcvInterval * 0.1, hist.pcv);
+      services.push({
+        name: 'PCV Valve',
+        desc: `Replace every ${formatMiles(pcvInterval)} miles. A stuck PCV valve causes oil leaks, rough idle, and excess emissions. Next at ${formatMiles(pcvDue)} miles.`,
+        status: pcvStatus,
+        tag: pcvStatus === 'urgent' ? 'Replace Now' : pcvStatus === 'soon' ? 'Due Soon' : 'On Track',
+        priority: pcvStatus === 'urgent' ? 1 : pcvStatus === 'soon' ? 3 : 9
+      });
+    }
+
+    // ── SERPENTINE BELT ─────────────────────────────────────────────────────────
+    if (engineType !== 'electric') {
+      const serpInterval = severe ? pi('serpentine', 60000) : pi('serpentine', 90000);
+      const { status: serpStatus, nextDue: serpDue } = intervalStatus(mileage, serpInterval, serpInterval * 0.1, hist.serpentine);
+      const serpFinal = serpStatus;
+      const serpUnknown = !hist.serpentine && mileage >= serpInterval;
+      services.push({
+        name: 'Serpentine Belt',
+        desc: `Inspect and replace every ${formatMiles(serpInterval)} miles. Drives the alternator, power steering, A/C, and water pump — belt failure strands the vehicle. Next at ${formatMiles(serpDue)} miles.${serpUnknown ? ' ⚠ No belt history — inspect for cracks, fraying, and glazing immediately.' : ''}`,
+        status: serpFinal,
+        tag: serpFinal === 'urgent' ? (serpUnknown ? 'Unknown — Inspect Now' : 'Inspect Now') : serpFinal === 'soon' ? 'Due Soon' : 'On Track',
+        priority: serpFinal === 'urgent' ? 0 : serpFinal === 'soon' ? 1 : 8,
+        newOwner: serpUnknown
+      });
+    }
+
+    // ── SHOCKS & STRUTS ─────────────────────────────────────────────────────────
+    {
+      const shockInterval = (usage === 'offroad') ? 25000 : (severe ? 40000 : 60000);
+      const { status: shockStatus, nextDue: shockDue } = intervalStatus(mileage, shockInterval, shockInterval * 0.1, hist.shocks);
+      const shockFinal = shockStatus;
+      const shockUnknown = !hist.shocks && mileage >= shockInterval;
+      services.push({
+        name: 'Shocks & Struts',
+        desc: `Inspect every ${formatMiles(shockInterval)} miles${usage === 'offroad' ? ' — off-road use dramatically shortens shock life' : severe ? ' (city/towing accelerates wear)' : ''}. Worn shocks increase stopping distance and cause uneven tire wear. Next at ${formatMiles(shockDue)} miles.${shockUnknown ? ' ⚠ No shock history — at this mileage, bounce test the vehicle and check for oil leakage on the shock body.' : ''}`,
+        status: shockFinal,
+        tag: shockFinal === 'urgent' ? (shockUnknown ? 'Unknown — Inspect Now' : 'Inspect Now') : shockFinal === 'soon' ? 'Inspect Soon' : 'On Track',
+        priority: shockFinal === 'urgent' ? 0 : shockFinal === 'soon' ? 2 : 9,
+        newOwner: shockUnknown
+      });
+    }
+
+    // ── BALL JOINTS ─────────────────────────────────────────────────────────────
+    {
+      const ballInterval = (usage === 'offroad') ? 30000 : (severe ? 50000 : 80000);
+      const { status: ballStatus, nextDue: ballDue } = intervalStatus(mileage, ballInterval, ballInterval * 0.1, hist.balljoints);
+      services.push({
+        name: 'Ball Joints & Tie Rods',
+        desc: `Inspect every ${formatMiles(ballInterval)} miles${usage === 'offroad' ? ' — off-road stress on ball joints is significant' : severe ? ' (city/towing increases wear)' : ''}. Worn joints cause loose steering and tire wear. Failure can result in loss of control. Next at ${formatMiles(ballDue)} miles.`,
+        status: ballStatus,
+        tag: ballStatus === 'urgent' ? 'Inspect Now' : ballStatus === 'soon' ? 'Inspect Soon' : 'On Track',
+        priority: ballStatus === 'urgent' ? 0 : ballStatus === 'soon' ? 1 : 9
+      });
+    }
+
+    // ── BRAKE FLUID FLUSH ───────────────────────────────────────────────────────
+    // Per 2020 Silverado manual footnote (7): "Replace brake fluid" — no mileage column,
+    // meaning it is time/condition-based. Industry standard is every 2 years or 45,000 mi.
+    if (engineType !== 'electric') {
+      const brakeFluidInterval = severe ? 30000 : pi('brakeFluid', 45000);
+      const { status: bfStatus, nextDue: bfDue } = intervalStatus(mileage, brakeFluidInterval, brakeFluidInterval * 0.1, hist.brakefluid);
+      const bfFinal = bfStatus;
+      const bfUnknown = !hist.brakefluid && mileage >= brakeFluidInterval;
+      services.push({
+        name: 'Brake Fluid Flush',
+        desc: `Per 2020 Silverado manual (footnote 7): replace brake fluid based on condition — no fixed mileage interval. Industry standard: every 2 years or ${formatMiles(brakeFluidInterval)} miles${severe ? ' (30,000 mi under severe use)' : ''}. Contaminated fluid lowers boiling point. Next check at ${formatMiles(bfDue)} miles.${bfUnknown ? ' ⚠ No flush history — brake fluid absorbs moisture over time. Test or flush immediately.' : ''}`,
+        status: bfFinal,
+        tag: bfFinal === 'urgent' ? (bfUnknown ? 'Unknown — Flush Now' : 'Flush Now') : bfFinal === 'soon' ? 'Due Soon' : 'On Track',
+        priority: bfFinal === 'urgent' ? 0 : bfFinal === 'soon' ? 2 : 8,
+        newOwner: bfUnknown
+      });
+    }
+
+    // ── A/C SYSTEM ──────────────────────────────────────────────────────────────
+    {
+      const acInterval = 50000;
+      const { status: acStatus, nextDue: acDue } = intervalStatus(mileage, acInterval, acInterval * 0.1, hist.ac);
+      services.push({
+        name: 'A/C System Inspection & Recharge',
+        desc: `Inspect refrigerant, compressor, and lines every ${formatMiles(acInterval)} miles. Low refrigerant reduces cooling efficiency and can damage the compressor. Next at ${formatMiles(acDue)} miles.`,
+        status: acStatus,
+        tag: acStatus === 'urgent' ? 'Service Now' : acStatus === 'soon' ? 'Due Soon' : 'On Track',
+        priority: acStatus === 'urgent' ? 1 : acStatus === 'soon' ? 3 : 10
+      });
+    }
+
+    // ── DIESEL-SPECIFIC ─────────────────────────────────────────────────────────
+    if (engineType === 'diesel') {
+      // DEF fluid (Diesel Exhaust Fluid) — replenish roughly every 10k miles
+      const defInterval = 10000;
+      const { status: defStatus, nextDue: defDue } = intervalStatus(mileage, defInterval, defInterval * 0.15);
+      services.push({
+        name: 'DEF (Diesel Exhaust Fluid) Level',
+        desc: `Top off every ${formatMiles(defInterval)} miles or sooner under heavy load. Running out triggers a speed limiter and eventually prevents restart. Next check at ${formatMiles(defDue)} miles.`,
+        status: defStatus,
+        tag: defStatus === 'urgent' ? 'Top Off Now' : defStatus === 'soon' ? 'Check Level' : 'On Track',
+        priority: defStatus === 'urgent' ? 0 : defStatus === 'soon' ? 1 : 4
+      });
+
+      // DPF (Diesel Particulate Filter) — regeneration every 100k, manual clean every 150k
+      const dpfInterval = severe ? 75000 : 100000;
+      const { status: dpfStatus, nextDue: dpfDue } = intervalStatus(mileage, dpfInterval, dpfInterval * 0.1);
+      services.push({
+        name: 'DPF (Diesel Particulate Filter) Service',
+        desc: `Inspect and force-regenerate every ${formatMiles(dpfInterval)} miles${severe ? ' — city/towing prevents passive regeneration, accelerating clogging' : ''}. A blocked DPF triggers limp mode. Next at ${formatMiles(dpfDue)} miles.`,
+        status: dpfStatus,
+        tag: dpfStatus === 'urgent' ? 'Service Now' : dpfStatus === 'soon' ? 'Plan Service' : 'On Track',
+        priority: dpfStatus === 'urgent' ? 0 : dpfStatus === 'soon' ? 1 : 6
+      });
+
+      // EGR valve — clogs faster under city/towing
+      const egrInterval = severe ? 50000 : 80000;
+      const { status: egrStatus, nextDue: egrDue } = intervalStatus(mileage, egrInterval, egrInterval * 0.1);
+      services.push({
+        name: 'EGR Valve Cleaning / Inspection',
+        desc: `Clean and inspect every ${formatMiles(egrInterval)} miles${severe ? ' — low-speed or towing use accelerates carbon buildup' : ''}. A stuck EGR causes rough idle, black smoke, and check engine light. Next at ${formatMiles(egrDue)} miles.`,
+        status: egrStatus,
+        tag: egrStatus === 'urgent' ? 'Service Now' : egrStatus === 'soon' ? 'Due Soon' : 'On Track',
+        priority: egrStatus === 'urgent' ? 0 : egrStatus === 'soon' ? 2 : 7
+      });
+    }
+
+    // ── OFF-ROAD SPECIFIC ───────────────────────────────────────────────────────
+    if (usage === 'offroad') {
+      services.push({
+        name: 'Undercarriage & Skid Plate Inspection',
+        desc: `Inspect undercarriage, skid plates, CV boots, and axle seals after every ${formatMiles(5000)} miles of off-road use. Mud and rocks cause damage that goes unnoticed until failure.`,
+        status: mileage % 5000 < 500 && mileage > 0 ? 'urgent' : mileage % 5000 > 4000 ? 'soon' : 'ok',
+        tag: mileage % 5000 < 500 && mileage > 0 ? 'Inspect Now' : mileage % 5000 > 4000 ? 'Due Soon' : 'On Track',
+        priority: 2
+      });
+
+      if (isAllWheel) {
+        services.push({
+          name: 'Locking Hub & Axle Inspection (4WD)',
+          desc: `Inspect locking hubs, front axle U-joints, and differential vents every 15,000 miles of mixed on/off-road use. Off-road stress on these components is significantly higher than normal.`,
+          status: mileage % 15000 > 13500 ? 'soon' : 'ok',
+          tag: mileage % 15000 > 13500 ? 'Inspect Soon' : 'On Track',
+          priority: 3
+        });
+      }
+    }
+
+    // ── TOWING-SPECIFIC ─────────────────────────────────────────────────────────
+    if (usage === 'towing') {
+      services.push({
+        name: 'Transmission Cooler Inspection',
+        desc: `Inspect transmission cooler lines and connections every 30,000 miles. Towing generates extreme transmission heat — a leaking cooler leads to rapid transmission failure.`,
+        status: mileage % 30000 > 28000 ? 'soon' : mileage % 30000 < 500 && mileage > 0 ? 'urgent' : 'ok',
+        tag: mileage % 30000 > 28000 ? 'Inspect Soon' : 'On Track',
+        priority: 2
+      });
+
+      services.push({
+        name: 'Trailer Hitch & Wiring Inspection',
+        desc: `Inspect hitch receiver, ball mount torque, safety chains, and 7-pin connector every 15,000 miles or seasonally. Electrical faults cause trailer light failures and safety violations.`,
+        status: mileage % 15000 > 13500 ? 'soon' : 'ok',
+        tag: mileage % 15000 > 13500 ? 'Inspect Soon' : 'On Track',
+        priority: 3
+      });
+    }
+
+    return services.sort((a, b) => a.priority - b.priority);
+  }
+
+  // ─── VEHICLE MAINTENANCE PROFILES ───────────────────────────────────────────
+  // Vehicle-specific maintenance intervals extracted from owner's manuals.
+  // Keys must match VEHICLES database entries (case-insensitive model match).
+  // Each profile overrides the default intervals in getServices().
+  const VEHICLE_PROFILES = {
+    "Toyota": {
+      "Corolla": {
+        source: "Toyota Corolla Owner's Manual (OM02580U) + Toyota Scheduled Maintenance Guide",
+        engines: [
+          { name: "1.8L 4-cyl (2ZR-FAE)", oil: "SAE 0W-20 ILSAC GF-5", oilQty: "4.4 qt w/filter" },
+          { name: "2.0L 4-cyl (M20A-FKS)", oil: "SAE 0W-16 API SN/RC", oilQty: "4.9 qt w/filter" }
+        ],
+        notes: [
+          "Electric power steering — NO power steering fluid required",
+          "CVT uses Toyota Genuine CVT Fluid FE only — do not substitute",
+          "Iridium spark plugs (DENSO FC16HR-Q8 or FC20HR-Q8) — do NOT adjust gap",
+          "Toyota Super Long Life Coolant (SLLC) — 100,000 mi / 10-year first interval",
+          "Brake pad wear limit: 1.5mm front and rear (2.0mm rear if electric parking brake)",
+          "Tire inflation: Front 38 psi / Rear 36 psi (cold)"
+        ],
+        intervals: {
+          oil:          5000,   // Every 5,000 mi or 6 months
+          tires:        5000,   // Every 5,000 mi (Toyota rotates with oil change)
+          cabinFilter:  15000,  // Every 15,000 mi or 1 year
+          airFilter:    30000,  // Inspect at 15k, replace at 30,000 mi
+          brakes:       15000,  // Inspect every 15,000 mi
+          sparkPlugs:   60000,  // Iridium plugs — both 1.8L and 2.0L
+          trans:        100000, // CVT fluid replace at 100,000 mi (normal) / 60k severe
+          transSevere:  60000,
+          coolant:      100000, // Toyota SLLC: first change at 100,000 mi / 10 yrs
+          coolantNext:  50000,  // Subsequent changes every 50,000 mi / 5 yrs
+          brakeFluid:   45000,  // Every 45,000 mi or 3 years
+          serpentine:   100000, // Inspect at 60k, replace ~100k
+          battery:      30000,  // Test every 30,000 mi
+          wipers:       12000,  // Every 12,000 mi or annually
+          fuelFilter:   60000,  // Integrated in tank, every 60,000 mi
+          pcv:          60000,  // Inspect/replace at 60,000 mi
+          alignment:    30000,  // Check every 30,000 mi
+        }
+      },
+      "Camry": {
+        source: "Toyota Camry Scheduled Maintenance Guide",
+        notes: [
+          "Electric power steering — NO power steering fluid required",
+          "Toyota Super Long Life Coolant — 100,000 mi first change",
+          "Iridium spark plugs — do NOT adjust gap"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 15000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 60000, trans: 100000, transSevere: 60000,
+          coolant: 100000, brakeFluid: 45000, serpentine: 100000, wipers: 12000
+        }
+      },
+      "RAV4": {
+        source: "Toyota RAV4 Scheduled Maintenance Guide",
+        notes: [
+          "AWD models: inspect rear differential fluid at 30,000 mi",
+          "Toyota Super Long Life Coolant — 100,000 mi first change",
+          "Iridium spark plugs — do NOT adjust gap"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 15000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 60000, trans: 60000, coolant: 100000,
+          brakeFluid: 45000, serpentine: 100000, wipers: 12000
+        }
+      },
+      "Tacoma": {
+        source: "Toyota Tacoma Scheduled Maintenance Guide",
+        notes: [
+          "4WD models: transfer case & differential fluid every 30,000 mi severe / 60,000 normal",
+          "Severe service (off-road, towing) shortens most intervals by 50%"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 15000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 60000, trans: 60000, coolant: 100000,
+          brakeFluid: 45000, serpentine: 100000, wipers: 12000
+        }
+      }
+    },
+    "Honda": {
+      "Civic": {
+        source: "Honda Civic Owner's Manual / Honda Maintenance Minder",
+        notes: [
+          "Honda Maintenance Minder system — oil life % displayed on dash",
+          "Code A: Oil change | Code B: Oil + tire rotation + inspection",
+          "Sub-codes: 1=tires, 2=air filter, 3=trans fluid, 4=spark plugs, 5=coolant, 6=rear diff",
+          "Honda Genuine 0W-20 oil recommended"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 15000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 30000, trans: 90000, coolant: 60000,
+          brakeFluid: 45000, serpentine: 90000, wipers: 12000
+        }
+      },
+      "Accord": {
+        source: "Honda Accord Owner's Manual / Honda Maintenance Minder",
+        notes: [
+          "Honda Maintenance Minder system controls oil change intervals",
+          "Turbocharged models (1.5T/2.0T) may need more frequent oil changes"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 15000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 30000, trans: 90000, coolant: 60000,
+          brakeFluid: 45000, serpentine: 90000, wipers: 12000
+        }
+      },
+      "CR-V": {
+        source: "Honda CR-V Owner's Manual / Honda Maintenance Minder",
+        notes: [
+          "AWD models: rear differential fluid every 30,000 mi",
+          "1.5T engine — more frequent oil changes recommended in cold climates"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 15000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 30000, trans: 90000, coolant: 60000,
+          brakeFluid: 45000, serpentine: 90000, wipers: 12000
+        }
+      }
+    },
+    "Ford": {
+      "F-150": {
+        source: "Ford F-150 Owner's Manual / Ford Intelligent Oil-Life Monitor",
+        notes: [
+          "Ford Intelligent Oil-Life Monitor — do NOT solely rely on mileage",
+          "EcoBoost engines (2.3L/3.5L) — synthetic oil required, 5W-30",
+          "Towing package: check transmission cooler lines every 30,000 mi",
+          "4WD models: transfer case fluid every 30,000 mi (severe) or 150,000 mi (normal)"
+        ],
+        intervals: {
+          oil: 7500, tires: 7500, cabinFilter: 20000, airFilter: 30000,
+          brakes: 20000, sparkPlugs: 60000, trans: 150000, transSevere: 30000,
+          coolant: 100000, brakeFluid: 45000, serpentine: 100000, wipers: 15000
+        }
+      },
+      "Mustang": {
+        source: "Ford Mustang Owner's Manual",
+        notes: [
+          "5.0L Coyote V8: full synthetic 5W-50 recommended for track use",
+          "GT500: 30,000 mi transmission fluid change recommended"
+        ],
+        intervals: {
+          oil: 7500, tires: 7500, cabinFilter: 20000, airFilter: 30000,
+          brakes: 20000, sparkPlugs: 60000, trans: 150000, coolant: 100000,
+          brakeFluid: 45000, serpentine: 100000, wipers: 15000
+        }
+      }
+    },
+    "Chevrolet": {
+      "Silverado": {
+        source: "2020 Chevrolet Silverado Owner's Manual (84186886C)",
+        notes: [
+          "Oil life monitoring system — change when indicated, max 7,500 mi",
+          "2.7L Turbo: spark plugs every 60,000 mi | V6/V8: every 82,500 mi",
+          "Evap control system: inspect every 45,000 mi",
+          "Transfer case: light GVW normal = 90,000 mi | severe = 45,000 mi",
+          "Brake fluid: condition-based per manual footnote 7 — no fixed mileage"
+        ],
+        intervals: {
+          oil: 7500, tires: 7500, cabinFilter: 22500, airFilter: 45000,
+          brakes: 25000, sparkPlugs: 60000, sparkPlugsStd: 82500,
+          trans: 97500, transSevere: 45000, coolant: 150000,
+          evap: 45000, wipers: 15000, serpentine: 150000,
+          transferCase: 90000, transferCaseSevere: 45000,
+          brakeFluid: 45000 // condition-based, industry std used
+        }
+      },
+      "Colorado": {
+        source: "Chevrolet Colorado Owner's Manual",
+        notes: [
+          "ZR2 models: more frequent differential and transfer case fluid changes",
+          "Diesel (2.8L Duramax): DEF fluid top-off every 10,000 mi"
+        ],
+        intervals: {
+          oil: 7500, tires: 7500, cabinFilter: 22500, airFilter: 45000,
+          brakes: 25000, sparkPlugs: 60000, trans: 97500, transSevere: 45000,
+          coolant: 150000, wipers: 15000, serpentine: 150000, brakeFluid: 45000
+        }
+      }
+    },
+    "GMC": {
+      "Sierra": {
+        source: "GMC Sierra Owner's Manual (same platform as Silverado)",
+        notes: [
+          "Shares platform/schedule with Chevrolet Silverado",
+          "Oil life monitoring system — max 7,500 mi interval"
+        ],
+        intervals: {
+          oil: 7500, tires: 7500, cabinFilter: 22500, airFilter: 45000,
+          brakes: 25000, sparkPlugs: 82500, trans: 97500, transSevere: 45000,
+          coolant: 150000, evap: 45000, wipers: 15000, serpentine: 150000, brakeFluid: 45000
+        }
+      }
+    },
+    "Jeep": {
+      "Wrangler": {
+        source: "Jeep Wrangler Owner's Manual",
+        notes: [
+          "Off-road/4WD use: axle differential fluid every 15,000 mi",
+          "Dana front/rear axles: inspect seals every 15,000 mi",
+          "Transfer case: NV241 or NV243 — fluid every 30,000 mi (off-road) / 60,000 (normal)",
+          "Rubicon: manual hubs — inspect at every oil change"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 20000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 30000, trans: 60000, coolant: 60000,
+          brakeFluid: 45000, serpentine: 90000, wipers: 12000,
+          transferCase: 60000, transferCaseSevere: 30000
+        }
+      },
+      "Grand Cherokee": {
+        source: "Jeep Grand Cherokee Owner's Manual",
+        notes: [
+          "Quadra-Drive II: rear axle fluid every 30,000 mi",
+          "Air suspension: inspect every 30,000 mi"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 20000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 30000, trans: 60000, coolant: 60000,
+          brakeFluid: 45000, serpentine: 90000, wipers: 12000
+        }
+      }
+    },
+    "Ram": {
+      "1500": {
+        source: "Ram 1500 Owner's Manual",
+        notes: [
+          "eTorque (48V mild hybrid): no additional service beyond standard intervals",
+          "EcoDiesel 3.0L: DEF fluid every 10,000 mi; DPF service at 100,000 mi",
+          "Oil life monitoring system — max 10,000 mi synthetic oil"
+        ],
+        intervals: {
+          oil: 7500, tires: 7500, cabinFilter: 20000, airFilter: 30000,
+          brakes: 20000, sparkPlugs: 30000, trans: 60000, coolant: 60000,
+          brakeFluid: 45000, serpentine: 100000, wipers: 15000
+        }
+      }
+    },
+    "Nissan": {
+      "Altima": {
+        source: "Nissan Altima Owner's Manual",
+        notes: [
+          "CVT (Xtronic): use Nissan NS-3 CVT fluid only",
+          "VC-Turbo engine (KR20DDET): synthetic oil required"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 15000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 60000, trans: 60000, coolant: 60000,
+          brakeFluid: 45000, serpentine: 90000, wipers: 12000
+        }
+      },
+      "Rogue": {
+        source: "Nissan Rogue Owner's Manual",
+        notes: [
+          "AWD: rear differential fluid inspect at 30,000 mi",
+          "CVT: Nissan NS-3 fluid only — never substitute"
+        ],
+        intervals: {
+          oil: 5000, tires: 5000, cabinFilter: 15000, airFilter: 30000,
+          brakes: 15000, sparkPlugs: 60000, trans: 60000, coolant: 60000,
+          brakeFluid: 45000, serpentine: 90000, wipers: 12000
+        }
+      }
+    }
+  };
+
+  function getVehicleProfile(make, model) {
+    if (!make || !model) return null;
+    const makeKey = Object.keys(VEHICLE_PROFILES).find(k => k.toLowerCase() === make.toLowerCase());
+    if (!makeKey) return null;
+    const modelKey = Object.keys(VEHICLE_PROFILES[makeKey]).find(k => k.toLowerCase() === model.toLowerCase());
+    if (!modelKey) return null;
+    return VEHICLE_PROFILES[makeKey][modelKey];
+  }
+
+  // ─── VEHICLE DATABASE ────────────────────────────────────────────────────────
+  const VEHICLES = {
+    "Acura": ["CL","ILX","Integra","Legend","MDX","NSX","RDX","RLX","RSX","TL","TLX","TSX","ZDX"],
+    "Alfa Romeo": ["4C","Giulia","Giulietta","GTV","MiTo","Spider","Stelvio","Tonale"],
+    "Aston Martin": ["DB11","DB9","DBS","DBX","Rapide","Vantage","Virage"],
+    "Audi": ["A3","A4","A5","A6","A7","A8","e-tron","Q3","Q5","Q7","Q8","R8","RS3","RS5","RS6","RS7","S3","S4","S5","S6","S7","S8","SQ5","SQ7","TT","TTS"],
+    "Bentley": ["Bentayga","Continental GT","Flying Spur","Mulsanne"],
+    "BMW": ["1 Series","2 Series","3 Series","4 Series","5 Series","6 Series","7 Series","8 Series","i3","i4","i7","iX","M2","M3","M4","M5","M8","X1","X2","X3","X4","X5","X6","X7","Z3","Z4"],
+    "Buick": ["Cascada","Encore","Encore GX","Enclave","Envision","LaCrosse","LeSabre","Lucerne","Park Avenue","Rainier","Regal","Rendezvous","Terraza","Verano"],
+    "Cadillac": ["ATS","CT4","CT5","CT6","CTS","DeVille","DTS","Eldorado","Escalade","ELR","Fleetwood","Lyriq","SRX","STS","XT4","XT5","XT6","XTS"],
+    "Chevrolet": ["Astro","Avalanche","Aveo","Blazer","Bolt EV","Bolt EUV","Camaro","Caprice","Captiva","City Express","Classic","Cobalt","Colorado","Corvette","Cruze","Equinox","Express","HHR","Impala","Lumina","Malibu","Metro","Monte Carlo","Prizm","S10","Silverado","Silverado 1500","Silverado 2500HD","Silverado 3500HD","Sonic","Spark","SS","Suburban","Tahoe","Tracker","TrailBlazer","Traverse","Trax","Uplander","Venture"],
+    "Chrysler": ["200","300","300C","Aspen","Crossfire","Grand Voyager","LHS","Pacifica","Prowler","PT Cruiser","Sebring","Town & Country","Voyager"],
+    "Dodge": ["Avenger","Caliber","Challenger","Charger","Dakota","Dart","Durango","Grand Caravan","Hornet","Journey","Magnum","Neon","Nitro","Ram 1500","Stealth","Stratus","Viper"],
+    "Ferrari": ["296 GTB","488","575M","599","612","812","California","F8","GTC4Lusso","Portofino","Roma","SF90"],
+    "Fiat": ["124 Spider","500","500L","500X","Bravo","Doblo","Punto","Tipo"],
+    "Ford": ["Bronco","Bronco Sport","C-Max","Crown Victoria","E-150","E-250","E-350","EcoSport","Edge","Escape","Excursion","Expedition","Explorer","F-150","F-250","F-350","F-450","Fiesta","Five Hundred","Flex","Focus","Freestar","Freestyle","Fusion","Galaxy","GT","Maverick","Mustang","Mustang Mach-E","Pinto","Probe","Ranger","Taurus","Taurus X","Territory","Thunderbird","Transit","Transit Connect","Windstar"],
+    "Genesis": ["G70","G80","G90","GV70","GV80"],
+    "GMC": ["Acadia","Canyon","Envoy","Jimmy","Safari","Savana","Sierra","Sierra 1500","Sierra 2500HD","Sierra 3500HD","Sonoma","Terrain","Typhoon","Yukon","Yukon XL"],
+    "Honda": ["Accord","Civic","CR-V","CR-Z","Element","Fit","HR-V","Insight","Odyssey","Passport","Pilot","Prelude","Prologue","Ridgeline","S2000"],
+    "Hummer": ["H1","H2","H3","EV"],
+    "Hyundai": ["Accent","Azera","Elantra","Elantra N","Entourage","Equus","Genesis","Ioniq","Ioniq 5","Ioniq 6","Kona","Nexo","Palisade","Santa Cruz","Santa Fe","Sonata","Tiburon","Tucson","Veloster","Venue","Veracruz"],
+    "Infiniti": ["EX35","FX35","FX37","FX45","FX50","G20","G25","G35","G37","I30","I35","J30","JX35","M35","M45","M56","Q30","Q45","Q50","Q60","Q70","QX30","QX50","QX56","QX60","QX70","QX80"],
+    "Isuzu": ["Amigo","Ascender","Axiom","i-280","i-290","i-350","i-370","Rodeo","Trooper","VehiCROSS"],
+    "Jaguar": ["E-Pace","F-Pace","F-Type","I-Pace","S-Type","X-Type","XE","XF","XJ","XJL","XK"],
+    "Jeep": ["Cherokee","Commander","Compass","Gladiator","Grand Cherokee","Grand Cherokee L","Grand Wagoneer","Liberty","Patriot","Renegade","Wagoneer","Wrangler"],
+    "Kia": ["Amanti","Borrego","Cadenza","Carnival","EV6","Forte","K5","K900","Niro","Optima","Rio","Sedona","Sephia","Soul","Sorento","Sportage","Stinger","Telluride"],
+    "Lamborghini": ["Aventador","Gallardo","Huracan","Urus"],
+    "Land Rover": ["Defender","Discovery","Discovery Sport","Freelander","LR2","LR3","LR4","Range Rover","Range Rover Evoque","Range Rover Sport","Range Rover Velar"],
+    "Lexus": ["CT 200h","ES 250","ES 300","ES 330","ES 350","GS 300","GS 350","GS 430","GS 450h","GS 460","GX 460","GX 470","IS 250","IS 300","IS 350","IS 500","LC 500","LS 400","LS 430","LS 460","LS 500","LX 470","LX 570","LX 600","NX 200t","NX 300","NX 350","RC 200t","RC 300","RC 350","RX 300","RX 330","RX 350","RX 400h","RX 450h","SC 400","SC 430","UX 200","UX 250h"],
+    "Lincoln": ["Aviator","Blackwood","Continental","Corsair","MKC","MKS","MKT","MKX","MKZ","Nautilus","Navigator","Town Car","Zephyr"],
+    "Lotus": ["Elise","Emira","Evora","Exige"],
+    "Maserati": ["Ghibli","GranTurismo","Grecale","Levante","MC20","Quattroporte"],
+    "Mazda": ["2","3","5","6","626","929","B2300","B3000","B4000","CX-3","CX-30","CX-5","CX-7","CX-9","CX-50","CX-60","CX-90","Miata","Millenia","MPV","MX-30","MX-5","Protege","RX-7","RX-8","Tribute"],
+    "McLaren": ["540C","570S","600LT","650S","675LT","720S","765LT","Artura","GT","P1","Senna"],
+    "Mercedes-Benz": ["A-Class","AMG GT","B-Class","C-Class","CLA","CLS","E-Class","EQB","EQC","EQE","EQS","G-Class","GLA","GLB","GLC","GLE","GLS","S-Class","SL","SLC","SLK","Sprinter"],
+    "Mercury": ["Cougar","Grand Marquis","Mariner","Milan","Montego","Monterey","Mountaineer","Mystique","Sable","Topaz","Tracer","Villager"],
+    "Mini": ["Clubman","Convertible","Countryman","Coupe","Hardtop","Paceman","Roadster"],
+    "Mitsubishi": ["3000GT","Eclipse","Eclipse Cross","Endeavor","Galant","Lancer","Mirage","Montero","Outlander","Outlander Sport","Raider","RVR","Sigma"],
+    "Nissan": ["350Z","370Z","Altima","Armada","Cube","Frontier","GT-R","Juke","Leaf","Maxima","Murano","NV200","NX","Pathfinder","Quest","Rogue","Rogue Sport","Sentra","Titan","Versa","Xterra","Z"],
+    "Oldsmobile": ["Alero","Aurora","Bravada","Cutlass","Cutlass Supreme","Intrigue","Silhouette"],
+    "Peugeot": ["2008","3008","5008","208","308","408","508","e-208","e-2008"],
+    "Plymouth": ["Breeze","Neon","Prowler","Voyager"],
+    "Pontiac": ["Aztek","Bonneville","Firebird","G5","G6","G8","Grand Am","Grand Prix","GTO","Montana","Solstice","Sunfire","Torrent","Vibe"],
+    "Porsche": ["718 Boxster","718 Cayman","911","Cayenne","Macan","Panamera","Taycan"],
+    "Ram": ["1500","2500","3500","ProMaster","ProMaster City"],
+    "Rivian": ["R1S","R1T"],
+    "Rolls-Royce": ["Cullinan","Dawn","Ghost","Phantom","Silver Seraph","Wraith"],
+    "Saab": ["9-3","9-5","9-7X"],
+    "Saturn": ["Astra","Aura","Ion","L-Series","Outlook","Relay","Sky","VUE"],
+    "Scion": ["FR-S","iA","iM","iQ","tC","xA","xB","xD"],
+    "Smart": ["Fortwo","EQ Fortwo"],
+    "Subaru": ["Ascent","BRZ","Crosstrek","Forester","Impreza","Legacy","Outback","Solterra","Tribeca","WRX","XV"],
+    "Suzuki": ["Aerio","Equator","Forenza","Grand Vitara","Kizashi","Reno","SX4","Verona","Vitara","XL7"],
+    "Tesla": ["Cybertruck","Model 3","Model S","Model X","Model Y","Roadster"],
+    "Toyota": ["4Runner","86","Avalon","Camry","Camry Hybrid","C-HR","Corolla","Corolla Cross","Crown","FJ Cruiser","GR86","GR Corolla","GR Supra","Highlander","Land Cruiser","Matrix","Mirai","MR2","Prius","Prius C","Prius V","RAV4","RAV4 Prime","Sequoia","Sienna","Solara","Supra","Tacoma","Tundra","Venza","Yaris"],
+    "Volkswagen": ["Arteon","Atlas","Beetle","CC","e-Golf","Eos","Golf","Golf Alltrack","Golf GTI","Golf R","Golf SportWagen","ID.4","Jetta","Passat","Phaeton","Rabbit","Routan","Taos","Tiguan","Touareg"],
+    "Volvo": ["C30","C40","C70","S40","S60","S80","S90","V40","V50","V60","V70","V90","XC40","XC60","XC70","XC90"]
+  };
+
+  const ALL_MAKES = Object.keys(VEHICLES).sort();
+
+  // ─── FUZZY MATCH ─────────────────────────────────────────────────────────────
+  function levenshtein(a, b) {
+    a = a.toLowerCase(); b = b.toLowerCase();
+    const m = a.length, n = b.length;
+    const dp = Array.from({length: m+1}, (_, i) => Array.from({length: n+1}, (_, j) => i === 0 ? j : j === 0 ? i : 0));
+    for (let i = 1; i <= m; i++)
+      for (let j = 1; j <= n; j++)
+        dp[i][j] = a[i-1] === b[j-1] ? dp[i-1][j-1] : 1 + Math.min(dp[i-1][j], dp[i][j-1], dp[i-1][j-1]);
+    return dp[m][n];
+  }
+
+  function fuzzySearch(query, list, maxResults = 6) {
+    if (!query) return [];
+    const q = query.toLowerCase();
+    return list
+      .map(item => {
+        const s = item.toLowerCase();
+        // Exact or starts-with gets priority
+        if (s === q) return { item, score: 0, type: 'exact' };
+        if (s.startsWith(q)) return { item, score: 1, type: 'prefix' };
+        if (s.includes(q)) return { item, score: 2, type: 'contains' };
+        const dist = levenshtein(q, s.substring(0, Math.min(s.length, q.length + 3)));
+        if (dist <= Math.max(2, Math.floor(q.length / 3))) return { item, score: 10 + dist, type: 'fuzzy' };
+        return null;
+      })
+      .filter(Boolean)
+      .sort((a, b) => a.score - b.score)
+      .slice(0, maxResults);
+  }
+
+  function isExactMatch(value, list) {
+    return list.some(item => item.toLowerCase() === value.toLowerCase());
+  }
+
+  function getCanonical(value, list) {
+    return list.find(item => item.toLowerCase() === value.toLowerCase()) || null;
+  }
+
+  // ─── AUTOCOMPLETE LOGIC ───────────────────────────────────────────────────────
+  let makeSelected = false, modelSelected = false;
+
+  function renderList(listId, results, onSelect) {
+    const el = document.getElementById(listId);
+    if (!results.length) { el.classList.remove('open'); return; }
+    el.innerHTML = results.map((r, i) =>
+      `<div class="autocomplete-item ${r.type === 'fuzzy' ? 'suggestion' : ''}" data-idx="${i}">
+        <span>${r.item}</span>
+        <span class="match-score">${r.type === 'fuzzy' ? '≈ suggestion' : r.type === 'exact' ? '✓ exact' : ''}</span>
+      </div>`
+    ).join('');
+    el.classList.add('open');
+    el.querySelectorAll('.autocomplete-item').forEach((div, i) => {
+      div.addEventListener('mousedown', e => { e.preventDefault(); onSelect(results[i].item); });
+    });
+  }
+
+  function onMakeInput() {
+    makeSelected = false;
+    modelSelected = false;
+    document.getElementById('model').value = '';
+    clearError('model');
+    const val = document.getElementById('make').value;
+    const results = fuzzySearch(val, ALL_MAKES);
+    renderList('make-list', results, selectMake);
+    if (val.length > 1) validateMake(false);
+  }
+
+  function onMakeFocus() {
+    const val = document.getElementById('make').value;
+    if (val.length > 0) {
+      const results = fuzzySearch(val, ALL_MAKES);
+      renderList('make-list', results, selectMake);
+    }
+  }
+
+  function onMakeBlur() {
+    setTimeout(() => {
+      document.getElementById('make-list').classList.remove('open');
+      validateMake(true);
+    }, 150);
+  }
+
+  function selectMake(item) {
+    document.getElementById('make').value = item;
+    document.getElementById('make-list').classList.remove('open');
+    makeSelected = true;
+    setValid('make');
+    clearError('make');
+    // Reset model
+    document.getElementById('model').value = '';
+    clearError('model');
+    modelSelected = false;
+  }
+
+  function onModelInput() {
+    modelSelected = false;
+    const make = getCanonical(document.getElementById('make').value, ALL_MAKES);
+    if (!make) return;
+    const models = VEHICLES[make] || [];
+    const val = document.getElementById('model').value;
+    const results = fuzzySearch(val, models);
+    renderList('model-list', results, selectModel);
+    if (val.length > 1) validateModel(false);
+  }
+
+  function onModelFocus() {
+    const make = getCanonical(document.getElementById('make').value, ALL_MAKES);
+    if (!make) return;
+    const models = VEHICLES[make] || [];
+    const val = document.getElementById('model').value;
+    if (val.length === 0) {
+      // Show all models when focused empty
+      const results = models.slice(0, 8).map(m => ({ item: m, score: 0, type: 'prefix' }));
+      renderList('model-list', results, selectModel);
+    } else {
+      const results = fuzzySearch(val, models);
+      renderList('model-list', results, selectModel);
+    }
+  }
+
+  function onModelBlur() {
+    setTimeout(() => {
+      document.getElementById('model-list').classList.remove('open');
+      validateModel(true);
+    }, 150);
+  }
+
+  function selectModel(item) {
+    document.getElementById('model').value = item;
+    document.getElementById('model-list').classList.remove('open');
+    modelSelected = true;
+    setValid('model');
+    clearError('model');
+  }
+
+  // ─── FIELD VALIDATION ─────────────────────────────────────────────────────────
+  function setError(fieldId, msg) {
+    const input = document.getElementById(fieldId);
+    const errEl = document.getElementById(fieldId + '-error');
+    input.classList.add('invalid');
+    input.classList.remove('valid');
+    if (errEl) errEl.innerHTML = '⚠ ' + msg;
+  }
+
+  function setValid(fieldId) {
+    const input = document.getElementById(fieldId);
+    const errEl = document.getElementById(fieldId + '-error');
+    input.classList.remove('invalid');
+    input.classList.add('valid');
+    if (errEl) errEl.innerHTML = '';
+  }
+
+  function clearError(fieldId) {
+    const input = document.getElementById(fieldId);
+    const errEl = document.getElementById(fieldId + '-error');
+    input.classList.remove('invalid', 'valid');
+    if (errEl) errEl.innerHTML = '';
+  }
+
+  function validateYear() {
+    const val = parseInt(document.getElementById('year').value);
+    const current = new Date().getFullYear();
+    if (!val) { clearError('year'); return false; }
+    if (val < 1980) { setError('year', 'Year must be 1980 or later'); return false; }
+    if (val > current + 1) { setError('year', `Year can't exceed ${current + 1}`); return false; }
+    setValid('year'); return true;
+  }
+
+  function validateMake(onBlur) {
+    const val = document.getElementById('make').value.trim();
+    if (!val) { clearError('make'); return false; }
+    if (isExactMatch(val, ALL_MAKES)) { setValid('make'); return true; }
+    const suggestions = fuzzySearch(val, ALL_MAKES, 3);
+    if (suggestions.length && onBlur) {
+      setError('make', `"${val}" not found. Did you mean: ${suggestions.map(s => s.item).join(', ')}?`);
+    } else if (onBlur) {
+      setError('make', `"${val}" is not a recognized vehicle make`);
+    }
+    return false;
+  }
+
+  function validateModel(onBlur) {
+    const makeVal = document.getElementById('make').value.trim();
+    const modelVal = document.getElementById('model').value.trim();
+    if (!modelVal) { clearError('model'); return false; }
+    const make = getCanonical(makeVal, ALL_MAKES);
+    if (!make) { clearError('model'); return false; }
+    const models = VEHICLES[make] || [];
+    if (isExactMatch(modelVal, models)) { setValid('model'); return true; }
+    const suggestions = fuzzySearch(modelVal, models, 3);
+    if (suggestions.length && onBlur) {
+      setError('model', `"${modelVal}" not found. Did you mean: ${suggestions.map(s => s.item).join(', ')}?`);
+    } else if (onBlur) {
+      setError('model', `"${modelVal}" not found for ${make}`);
+    }
+    return false;
+  }
+
+  function validateMileage() {
+    const val = parseInt(document.getElementById('mileage').value);
+    if (isNaN(val)) { clearError('mileage'); return false; }
+    if (val < 0) { setError('mileage', 'Mileage cannot be negative'); return false; }
+    if (val > 999999) { setError('mileage', 'Please enter a valid mileage'); return false; }
+    setValid('mileage'); return true;
+  }
+
+  function hideBanner() {
+    document.getElementById('validation-banner').classList.remove('show');
+  }
+
+  function showBanner(html) {
+    const el = document.getElementById('validation-banner');
+    document.getElementById('banner-body').innerHTML = html;
+    el.classList.add('show');
+    el.scrollIntoView({ behavior: 'smooth', block: 'nearest' });
+  }
+
+  // ─── VIN LOOKUP ──────────────────────────────────────────────────────────────
+
+  let vinData = null;
+  let vinCameraStream = null;
+  let vinScanInterval = null;
+  let vinPhotoBase64 = null;
+
+  function setVinMethod(method) {
+    ['type','photo','scan'].forEach(m => {
+      document.getElementById('vin-btn-' + m).classList.toggle('active', m === method);
+      document.getElementById('vin-area-' + m).classList.toggle('show', m === method);
+    });
+    if (method !== 'scan') stopVinCamera();
+  }
+
+  function onVinInput(el) {
+    el.value = el.value.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g, '');
+    const len = el.value.length;
+    el.classList.toggle('invalid', len > 0 && len < 17);
+    el.classList.toggle('valid', len === 17);
+    document.getElementById('vin-lookup-btn').disabled = len !== 17;
+    document.getElementById('vin-type-status').textContent = len === 0
+      ? 'Enter your 17-character VIN — found on dashboard (driver side), door jamb sticker, or registration.'
+      : len < 17 ? `\${17 - len} characters remaining — VIN is always exactly 17 characters`
+      : '✓ 17 characters — ready to look up';
+    document.getElementById('vin-type-status').className = 'vin-status' + (len === 17 ? ' success' : '');
+  }
+
+  async function lookupVin(vin) {
+    const vinStr = vin || document.getElementById('vin-input')?.value?.trim();
+    if (!vinStr || vinStr.length !== 17) return;
+
+    setVinStatus('type', 'loading', 'Looking up VIN via NHTSA database...');
+    document.getElementById('vin-result').classList.remove('show','error');
+
+    try {
+      const res = await fetch(`https://vpic.nhtsa.dot.gov/api/vehicles/DecodeVin/\${vinStr}?format=json`);
+      const data = await res.json();
+
+      if (!data.Results) throw new Error('No results');
+
+      const get = (var_) => {
+        const r = data.Results.find(x => x.Variable === var_);
+        return r && r.Value && r.Value !== 'Not Applicable' && r.Value !== 'null' ? r.Value : null;
+      };
+
+      vinData = {
+        vin:          vinStr,
+        year:         get('Model Year'),
+        make:         get('Make'),
+        model:        get('Model'),
+        trim:         get('Trim'),
+        engine:       get('Engine Configuration'),
+        engineCC:     get('Displacement (CC)'),
+        engineCyl:    get('Engine Number of Cylinders'),
+        fuel:         get('Fuel Type - Primary'),
+        transmission: get('Transmission Style'),
+        driveType:    get('Drive Type'),
+        bodyStyle:    get('Body Class'),
+        plant:        get('Plant City'),
+        country:      get('Plant Country'),
+        series:       get('Series'),
+        doors:        get('Number of Doors'),
+        gvwr:         get('Gross Vehicle Weight Rating From'),
+        electrMotor:  get('Electrification Level'),
+        errorCode:    get('Error Code'),
+        errorText:    get('Error Text'),
+      };
+
+      if (!vinData.make || !vinData.year) {
+        throw new Error(vinData.errorText || 'Vehicle not found in NHTSA database');
+      }
+
+      renderVinResult();
+      setVinStatus('type', 'success', `✓ \${vinData.year} \${vinData.make} \${vinData.model} identified`);
+
+    } catch(err) {
+      setVinStatus('type', 'error', '✗ ' + (err.message || 'Lookup failed — check VIN and try again'));
+      const r = document.getElementById('vin-result');
+      r.classList.add('show','error');
+      document.getElementById('vin-result-title').textContent = '✗ VIN Lookup Failed';
+      document.getElementById('vin-result-grid').innerHTML =
+        `<div style="font-size:13px;color:var(--muted);grid-column:1/-1">\${err.message || 'Could not decode this VIN. Verify all 17 characters are correct. NHTSA covers most US-market vehicles.'}</div>`;
+    }
+  }
+
+  function renderVinResult() {
+    if (!vinData) return;
+    const fields = [
+      ['Year',           vinData.year],
+      ['Make',           vinData.make],
+      ['Model',          vinData.model],
+      ['Trim / Series',  [vinData.trim, vinData.series].filter(Boolean).join(' ') || null],
+      ['Engine',         vinData.engineCyl ? `\${vinData.engineCyl}-Cyl` + (vinData.engineCC ? ` \${(vinData.engineCC/1000).toFixed(1)}L` : '') : null],
+      ['Fuel Type',      vinData.fuel],
+      ['Transmission',   vinData.transmission],
+      ['Drive Type',     vinData.driveType],
+      ['Body Style',     vinData.bodyStyle],
+      ['Doors',          vinData.doors],
+      ['GVWR',           vinData.gvwr],
+      ['Plant',          [vinData.plant, vinData.country].filter(Boolean).join(', ')],
+    ].filter(([,v]) => v);
+
+    const r = document.getElementById('vin-result');
+    r.classList.remove('error');
+    r.classList.add('show');
+    document.getElementById('vin-result-title').textContent = '✓ Vehicle Identified — ' + vinData.vin;
+    document.getElementById('vin-result-grid').innerHTML = fields.map(([label, val]) =>
+      `<div class="vin-field">
+        <div class="vin-field-label">\${label}</div>
+        <div class="vin-field-value">\${val}</div>
+      </div>`
+    ).join('');
+  }
+
+  function autofillFromVin() {
+    if (!vinData) return;
+
+    // Year
+    if (vinData.year) {
+      document.getElementById('year').value = vinData.year;
+      validateYear();
+    }
+
+    // Make
+    if (vinData.make) {
+      const makeCanon = getCanonical(vinData.make, ALL_MAKES);
+      const makeVal = makeCanon || vinData.make;
+      document.getElementById('make').value = makeVal;
+      makeSelected = !!makeCanon;
+      if (makeCanon) { setValid('make'); clearError('make'); }
+      // Reset model
+      document.getElementById('model').value = '';
+      clearError('model'); modelSelected = false;
+    }
+
+    // Model
+    if (vinData.model) {
+      const make = getCanonical(document.getElementById('make').value, ALL_MAKES);
+      const models = make ? VEHICLES[make] || [] : [];
+      const modelCanon = getCanonical(vinData.model, models);
+      const modelVal = modelCanon || vinData.model;
+      document.getElementById('model').value = modelVal;
+      modelSelected = !!modelCanon;
+      if (modelCanon) { setValid('model'); clearError('model'); }
+    }
+
+    // Engine type
+    if (vinData.fuel) {
+      const f = vinData.fuel.toLowerCase();
+      const el = document.getElementById('engine');
+      if (f.includes('electric') && f.includes('gas')) el.value = 'hybrid';
+      else if (f.includes('electric')) el.value = 'electric';
+      else if (f.includes('diesel')) el.value = 'diesel';
+      else el.value = 'gas';
+    }
+
+    // Drivetrain
+    if (vinData.driveType) {
+      const d = vinData.driveType.toLowerCase();
+      const el = document.getElementById('drivetrain');
+      if (d.includes('4wd') || d.includes('4x4') || d.includes('four wheel')) el.value = '4wd';
+      else if (d.includes('awd') || d.includes('all wheel')) el.value = 'awd';
+      else el.value = '2wd';
+    }
+
+    // Flash all filled fields
+    ['year','make','model'].forEach(id => {
+      const el = document.getElementById(id);
+      if (el && el.value) {
+        el.style.transition = 'background 0.4s';
+        el.style.background = 'rgba(232,255,71,0.1)';
+        setTimeout(() => { el.style.background = ''; }, 800);
+      }
+    });
+
+    // Scroll down to mileage
+    setTimeout(() => {
+      document.getElementById('mileage')?.scrollIntoView({ behavior: 'smooth', block: 'center' });
+      document.getElementById('mileage')?.focus();
+    }, 300);
+  }
+
+  function setVinStatus(method, type, msg) {
+    const el = document.getElementById('vin-' + method + '-status');
+    if (!el) return;
+    el.className = 'vin-status ' + type;
+    el.innerHTML = type === 'loading'
+      ? `<span class="vin-spinner"></span> \${msg}`
+      : msg;
+  }
+
+  // ── PHOTO / IMAGE VIN EXTRACTION ──────────────────────────────────────────────
+  function handleVinPhotoDrop(e) {
+    e.preventDefault();
+    document.getElementById('vin-drop-zone').classList.remove('dragover');
+    const file = e.dataTransfer.files[0];
+    if (file && file.type.startsWith('image/')) loadVinPhoto(file);
+  }
+
+  function handleVinPhotoFile(e) {
+    const file = e.target.files[0];
+    if (file) loadVinPhoto(file);
+  }
+
+  function loadVinPhoto(file) {
+    const reader = new FileReader();
+    reader.onload = (e) => {
+      vinPhotoBase64 = e.target.result;
+      const preview = document.getElementById('vin-photo-preview');
+      preview.src = vinPhotoBase64;
+      preview.style.display = 'block';
+      document.getElementById('vin-photo-action-btns').style.display = 'flex';
+      setVinStatus('photo', '', 'Image loaded — tap "Extract VIN from Image" to read the VIN');
+    };
+    reader.readAsDataURL(file);
+  }
+
+  function resetVinPhoto() {
+    vinPhotoBase64 = null;
+    const preview = document.getElementById('vin-photo-preview');
+    preview.src = ''; preview.style.display = 'none';
+    document.getElementById('vin-photo-action-btns').style.display = 'none';
+    document.getElementById('vin-photo-input').value = '';
+    setVinStatus('photo', '', '');
+    document.getElementById('vin-result').classList.remove('show');
+  }
+
+  async function extractVinFromPhoto() {
+    if (!vinPhotoBase64) return;
+    setVinStatus('photo', 'loading', 'Analyzing image with AI — please wait...');
+    document.getElementById('vin-result').classList.remove('show','error');
+    const fallback = document.getElementById('vin-photo-fallback');
+    if (fallback) fallback.style.display = 'none';
+
+    try {
+      const base64Data = vinPhotoBase64.split(',')[1];
+      const mediaType = vinPhotoBase64.match(/data:(image\/[^;]+)/)[1];
+
+      const res = await fetch('https://api.anthropic.com/v1/messages', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'anthropic-version': '2023-06-01',
+          'anthropic-dangerous-direct-browser-access': 'true'
+        },
+        body: JSON.stringify({
+          model: 'claude-sonnet-4-20250514',
+          max_tokens: 200,
+          messages: [{
+            role: 'user',
+            content: [
+              {
+                type: 'image',
+                source: { type: 'base64', media_type: mediaType, data: base64Data }
+              },
+              {
+                type: 'text',
+                text: 'Find the VIN (Vehicle Identification Number) in this image. VIN = exactly 17 chars, uppercase letters A-H J-N P-Z and digits 0-9 only (never I, O, Q). Found on dashboard sticker, door jamb label, engine bay plate, or document. Reply with ONLY the 17-char VIN, no spaces, nothing else. If not visible: NOT_FOUND'
+              }
+            ]
+          }]
+        })
+      });
+
+      if (!res.ok) throw new Error('API ' + res.status);
+
+      const data = await res.json();
+      const rawText = (data.content?.[0]?.text || '').trim().toUpperCase();
+      const vinMatch = rawText.match(/[A-HJ-NPR-Z0-9]{17}/);
+      const extracted = vinMatch ? vinMatch[0] : '';
+
+      if (!extracted) {
+        setVinStatus('photo', 'error', '✗ No VIN detected in image — try better lighting or a closer shot');
+        if (fallback) fallback.style.display = 'block';
+        return;
+      }
+
+      setVinStatus('photo', 'success', '✓ VIN detected: ' + extracted + ' — looking up...');
+      document.getElementById('vin-input').value = extracted;
+      setVinMethod('type');
+      onVinInput(document.getElementById('vin-input'));
+      lookupVin(extracted);
+
+    } catch(err) {
+      console.warn('VIN AI extraction error:', err.message);
+      setVinStatus('photo', 'error', '✗ AI extraction failed — read the VIN from your photo and type it below');
+      if (fallback) fallback.style.display = 'block';
+    }
+  }
+
+  function showVinManualFallback() {
+    const f = document.getElementById('vin-photo-fallback');
+    if (f) f.style.display = 'block';
+  }
+
+  // ── LIVE CAMERA SCAN ──────────────────────────────────────────────────────────
+  async function startVinCamera() {
+    try {
+      setVinStatus('scan', 'loading', 'Requesting camera access...');
+      const stream = await navigator.mediaDevices.getUserMedia({
+        video: { facingMode: 'environment', width: { ideal: 1920 }, height: { ideal: 1080 } }
+      });
+      vinCameraStream = stream;
+      const video = document.getElementById('vin-video');
+      video.srcObject = stream;
+      video.style.display = 'block';
+      document.getElementById('vin-cam-placeholder').style.display = 'none';
+      document.getElementById('vin-scan-overlay').style.display = 'flex';
+      document.getElementById('vin-start-cam-btn').style.display = 'none';
+      document.getElementById('vin-stop-cam-btn').style.display = '';
+      document.getElementById('vin-capture-btn').style.display = '';
+      setVinStatus('scan', 'loading', 'Camera active — point at VIN sticker. Tap "Capture Frame" to read.');
+
+      // Try BarcodeDetector API (Chrome/Android)
+      if ('BarcodeDetector' in window) {
+        setVinStatus('scan', 'loading', '🔍 Auto-scanning for VIN barcode...');
+        const detector = new BarcodeDetector({ formats: ['code_39', 'code_93', 'code_128', 'data_matrix', 'pdf417'] });
+        vinScanInterval = setInterval(async () => {
+          if (!vinCameraStream) return;
+          try {
+            const barcodes = await detector.detect(video);
+            for (const bc of barcodes) {
+              const raw = bc.rawValue.toUpperCase().replace(/[^A-HJ-NPR-Z0-9]/g,'');
+              if (raw.length === 17) {
+                clearInterval(vinScanInterval);
+                stopVinCamera();
+                setVinStatus('scan', 'success', `✓ Barcode VIN scanned: \${raw}`);
+                document.getElementById('vin-input').value = raw;
+                setVinMethod('type');
+                onVinInput(document.getElementById('vin-input'));
+                lookupVin(raw);
+                return;
+              }
+            }
+          } catch(e) {}
+        }, 500);
+      }
+    } catch(err) {
+      setVinStatus('scan', 'error', '✗ Camera access denied — check browser permissions or use photo/manual entry');
+    }
+  }
+
+  function stopVinCamera() {
+    if (vinScanInterval) { clearInterval(vinScanInterval); vinScanInterval = null; }
+    if (vinCameraStream) {
+      vinCameraStream.getTracks().forEach(t => t.stop());
+      vinCameraStream = null;
+    }
+    const video = document.getElementById('vin-video');
+    if (video) { video.srcObject = null; video.style.display = 'none'; }
+    const overlay = document.getElementById('vin-scan-overlay');
+    if (overlay) overlay.style.display = 'none';
+    const placeholder = document.getElementById('vin-cam-placeholder');
+    if (placeholder) placeholder.style.display = '';
+    const startBtn = document.getElementById('vin-start-cam-btn');
+    if (startBtn) startBtn.style.display = '';
+    const stopBtn = document.getElementById('vin-stop-cam-btn');
+    if (stopBtn) stopBtn.style.display = 'none';
+    const capBtn = document.getElementById('vin-capture-btn');
+    if (capBtn) capBtn.style.display = 'none';
+  }
+
+  async function captureVinFrame() {
+    const video = document.getElementById('vin-video');
+    if (!video || !vinCameraStream) return;
+
+    setVinStatus('scan', 'loading', 'Capturing frame and analyzing with AI...');
+
+    const canvas = document.createElement('canvas');
+    canvas.width = video.videoWidth;
+    canvas.height = video.videoHeight;
+    canvas.getContext('2d').drawImage(video, 0, 0);
+    const dataUrl = canvas.toDataURL('image/jpeg', 0.92);
+
+    stopVinCamera();
+    vinPhotoBase64 = dataUrl;
+    setVinMethod('photo');
+    document.getElementById('vin-photo-preview').src = dataUrl;
+    document.getElementById('vin-photo-preview').style.display = 'block';
+    document.getElementById('vin-photo-action-btns').style.display = 'flex';
+    extractVinFromPhoto();
+  }
+
+  // ─── ANALYZE ─────────────────────────────────────────────────────────────────
+  function analyze() {
+    hideBanner();
+    const yearVal = parseInt(document.getElementById('year').value);
+    const makeVal = document.getElementById('make').value.trim();
+    const modelVal = document.getElementById('model').value.trim();
+    const mileage = parseInt(document.getElementById('mileage').value);
+    const engine = document.getElementById('engine').value;
+
+    let errors = [];
+
+    // Year check
+    if (!yearVal || isNaN(yearVal)) {
+      setError('year', 'Please enter a year');
+      errors.push('year is missing');
+    } else if (!validateYear()) {
+      errors.push('year is invalid');
+    }
+
+    // Make check
+    const makeCanon = getCanonical(makeVal, ALL_MAKES);
+    if (!makeVal) {
+      setError('make', 'Please enter a vehicle make');
+      errors.push('make is missing');
+    } else if (!makeCanon) {
+      const suggestions = fuzzySearch(makeVal, ALL_MAKES, 4);
+      if (suggestions.length) {
+        setError('make', `Did you mean: ${suggestions.map(s => s.item).join(', ')}?`);
+        errors.push(`make "<strong>${makeVal}</strong>" not recognized — possible matches: <strong>${suggestions.map(s => s.item).join(', ')}</strong>`);
+      } else {
+        setError('make', `"${makeVal}" is not a recognized make`);
+        errors.push(`make "<strong>${makeVal}</strong>" was not found in our vehicle database`);
+      }
+    }
+
+    // Model check
+    const models = makeCanon ? VEHICLES[makeCanon] : [];
+    const modelCanon = makeCanon ? getCanonical(modelVal, models) : null;
+    if (!modelVal) {
+      setError('model', 'Please enter a vehicle model');
+      errors.push('model is missing');
+    } else if (makeCanon && !modelCanon) {
+      const suggestions = fuzzySearch(modelVal, models, 4);
+      if (suggestions.length) {
+        setError('model', `Did you mean: ${suggestions.map(s => s.item).join(', ')}?`);
+        errors.push(`model "<strong>${modelVal}</strong>" not found for ${makeCanon} — did you mean: <strong>${suggestions.map(s => s.item).join(', ')}</strong>?`);
+      } else {
+        setError('model', `"${modelVal}" not found for ${makeCanon}`);
+        errors.push(`model "<strong>${modelVal}</strong>" was not found under ${makeCanon}`);
+      }
+    }
+
+    // Mileage check
+    if (isNaN(mileage)) {
+      setError('mileage', 'Please enter current mileage');
+      errors.push('mileage is missing');
+    } else if (!validateMileage()) {
+      errors.push('mileage value is invalid');
+    }
+
+    if (errors.length) {
+      showBanner(`Please fix the following before analyzing:<br><br>${errors.map(e => `• ${e}`).join('<br>')}`);
+      return;
+    }
+
+    const make = makeCanon;
+    const model = modelCanon;
+    const year = yearVal;
+
+    const drivetrain = document.getElementById('drivetrain').value;
+    const usage = document.getElementById('usage').value;
+    const ownership = document.getElementById('tab-new').classList.contains('active') ? 'new' : 'current';
+    const history = {
+      oil:          document.getElementById('tog-oil')?.checked ?? false,
+      tires:        document.getElementById('tog-tires')?.checked ?? false,
+      brakes:       document.getElementById('tog-brakes')?.checked ?? false,
+      airfilter:    document.getElementById('tog-airfilter')?.checked ?? false,
+      cabinfilter:  document.getElementById('tog-cabinfilter')?.checked ?? false,
+      trans:        document.getElementById('tog-trans')?.checked ?? false,
+      plugs:        document.getElementById('tog-plugs')?.checked ?? false,
+      coolant:      document.getElementById('tog-coolant')?.checked ?? false,
+      timing:       document.getElementById('tog-timing')?.checked ?? false,
+      serpentine:   document.getElementById('tog-serpentine')?.checked ?? false,
+      brakefluid:   document.getElementById('tog-brakefluid')?.checked ?? false,
+      shocks:       document.getElementById('tog-shocks')?.checked ?? false,
+      fuel:         document.getElementById('tog-fuel')?.checked ?? false,
+      pcv:          document.getElementById('tog-pcv')?.checked ?? false,
+      evap:         document.getElementById('tog-evap')?.checked ?? false,
+      balljoints:   document.getElementById('tog-balljoints')?.checked ?? false,
+      wipers:       document.getElementById('tog-wipers')?.checked ?? false,
+      battery:      document.getElementById('tog-battery')?.checked ?? false,
+      ac:           document.getElementById('tog-ac')?.checked ?? false,
+      transfercase: document.getElementById('tog-transfercase')?.checked ?? false,
+      diff:         document.getElementById('tog-diff')?.checked ?? false,
+    };
+    const vehicleProfile = getVehicleProfile(make, model);
+    const services = getServices(mileage, engine, drivetrain, usage, ownership, history, vehicleProfile);
+    const urgent = services.filter(s => s.status === 'urgent');
+    const soon = services.filter(s => s.status === 'soon');
+    const ok = services.filter(s => s.status === 'ok');
+
+    const engineLabel = { gas: 'Gasoline', diesel: 'Diesel', hybrid: 'Hybrid', electric: 'Electric' }[engine];
+    const drivetrainLabel = { '2wd': '2WD', 'awd': 'AWD', '4wd': '4WD', '4wdfull': '4WD Full-Time' }[drivetrain];
+    const usageLabel = { 'normal': 'Daily Driver', 'towing': 'Towing/Hauling', 'offroad': 'Off-Road', 'city': 'City Driving', 'highway': 'Highway' }[usage];
+
+    const isNewOwner = (ownership === 'new');
+    const unknownCount = services.filter(s => s.newOwner).length;
+
+    let html = ``;
+
+    if (vehicleProfile) {
+      html += `<div style="background:rgba(232,255,71,0.06);border:1px solid rgba(232,255,71,0.2);border-radius:6px;padding:14px 18px;margin-bottom:20px;">
+        <div style="font-family:'DM Mono',monospace;font-size:10px;letter-spacing:2px;color:var(--accent);text-transform:uppercase;margin-bottom:8px;">📋 Vehicle-Specific Schedule Loaded</div>
+        <div style="font-size:12px;color:var(--muted);margin-bottom:8px;"><em>${vehicleProfile.source}</em></div>
+        ${vehicleProfile.notes ? vehicleProfile.notes.map(n => `<div style="font-size:12px;color:var(--text);margin-top:4px;">• ${n}</div>`).join('') : ''}
+      </div>`;
+    }
+
+    if (isNewOwner) {
+      html += `<div class="new-owner-alert">
+        <div class="alert-title">🔑 New Owner Safety Protocol</div>
+        <div class="alert-body">
+          Since you just acquired this vehicle, <strong>we cannot verify any prior maintenance</strong>. 
+          All services below marked <em>New Owner</em> should be treated as overdue until proven otherwise.
+          ${unknownCount > 0 ? `<strong>${unknownCount} items flagged for immediate inspection.</strong>` : ''}
+          Priority: brakes, tires, coolant, fluids, and belts before driving long distances.
+        </div>
+      </div>`;
+    }
+
+    html += `
+      <div class="results-header">
+        <div class="vehicle-badge">${year} ${make.toUpperCase()} ${model.toUpperCase()}</div>
+        <div class="mileage-badge">${formatMiles(mileage)} mi · ${engineLabel}</div>
+        <div class="mileage-badge" style="background:rgba(232,255,71,0.08);border-color:rgba(232,255,71,0.2);color:var(--accent);">${drivetrainLabel} · ${usageLabel}</div>
+      </div>
+
+      <div class="summary-bar">
+        ${urgent.length ? `<div class="summary-pill pill-urgent">● ${urgent.length} URGENT</div>` : ''}
+        ${soon.length ? `<div class="summary-pill pill-soon">● ${soon.length} DUE SOON</div>` : ''}
+        <div class="summary-pill pill-ok">● ${ok.length} ON TRACK</div>
+      </div>
+    `;
+
+    if (urgent.length) {
+      html += `<div class="section-label">⚠ Needs Immediate Attention</div><div class="services-grid">`;
+      urgent.forEach(s => {
+        html += `<div class="service-card urgent${s.newOwner ? ' new-owner-item' : ''}">
+          <div class="status-dot"></div>
+          <div class="service-info"><div class="name">${s.name}</div><div class="desc">${s.desc}</div></div>
+          <div class="service-tag">${s.tag}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (soon.length) {
+      html += `<div class="section-label">○ Schedule Soon</div><div class="services-grid">`;
+      soon.forEach(s => {
+        html += `<div class="service-card soon">
+          <div class="status-dot"></div>
+          <div class="service-info"><div class="name">${s.name}</div><div class="desc">${s.desc}</div></div>
+          <div class="service-tag">${s.tag}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    if (ok.length) {
+      html += `<div class="section-label">✓ Looking Good</div><div class="services-grid">`;
+      ok.forEach(s => {
+        html += `<div class="service-card ok">
+          <div class="status-dot"></div>
+          <div class="service-info"><div class="name">${s.name}</div><div class="desc">${s.desc}</div></div>
+          <div class="service-tag">${s.tag}</div>
+        </div>`;
+      });
+      html += `</div>`;
+    }
+
+    html += `<p class="disclaimer">⚡ Recommendations are based on standard industry intervals and general guidelines. Always consult your owner's manual and a certified mechanic for vehicle-specific service schedules. Driving conditions, climate, and usage patterns may affect actual service needs.</p>`;
+
+    // Wrap maintenance content in tab panel
+    html = `
+      <div class="results-tabs">
+        <button class="results-tab active" onclick="switchResultTab('maintenance', this)">📋 Maintenance Schedule</button>
+        <button class="results-tab" onclick="switchResultTab('inspection', this)">🔍 Visual Inspection</button>
+      </div>
+      <div id="tab-maintenance" class="results-tab-panel active">${html}</div>
+      <div id="tab-inspection" class="results-tab-panel">${buildInspectionTab(mileage, engineType, drivetrain, usage, isNewOwner)}</div>
+    `;
+
+    const resultsEl = document.getElementById('results');
+    resultsEl.innerHTML = html;
+    resultsEl.style.display = 'block';
+    resultsEl.scrollIntoView({ behavior: 'smooth', block: 'start' });
+    setTimeout(updateInspectStats, 100);
+  }
+
+  // ─── TOGGLE ALL ──────────────────────────────────────────────────────────────
+  function setAllToggles(val) {
+    const ids = ['tog-oil','tog-tires','tog-brakes','tog-airfilter','tog-cabinfilter',
+      'tog-trans','tog-plugs','tog-coolant','tog-timing','tog-serpentine','tog-brakefluid',
+      'tog-shocks','tog-fuel','tog-pcv','tog-evap','tog-balljoints','tog-wipers',
+      'tog-battery','tog-ac','tog-transfercase','tog-diff'];
+    ids.forEach(id => {
+      const el = document.getElementById(id);
+      if (el) el.checked = val;
+    });
+  }
+
+  // ─── OWNERSHIP TAB TOGGLE ────────────────────────────────────────────────────
+  function setOwnership(mode) {
+    const tabCurrent = document.getElementById('tab-current');
+    const tabNew = document.getElementById('tab-new');
+    const histPanel = document.getElementById('history-panel');
+
+    if (mode === 'new') {
+      tabNew.classList.add('active');
+      tabCurrent.classList.remove('active');
+      // Still show toggles — new owner may have done some services (e.g. oil change yesterday)
+    } else {
+      tabCurrent.classList.add('active');
+      tabNew.classList.remove('active');
+    }
+  }
+
+  // ─── RESULT TABS ─────────────────────────────────────────────────────────────
+  function switchResultTab(tab, btn) {
+    document.querySelectorAll('.results-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.results-tab-panel').forEach(p => p.classList.remove('active'));
+    btn.classList.add('active');
+    document.getElementById('tab-' + tab).classList.add('active');
+  }
+
+  function toggleSection(el) {
+    el.closest('.inspect-section').classList.toggle('collapsed');
+  }
+
+  function setInspect(id, state) {
+    const item = document.getElementById('inspect-' + id);
+    if (!item) return;
+    item.classList.remove('checked','flagged','warning');
+    const cb = item.querySelector('.inspect-checkbox');
+    if (state === 'ok')   { item.classList.add('checked');  cb.textContent = '✓'; }
+    if (state === 'flag') { item.classList.add('flagged');  cb.textContent = '✗'; }
+    if (state === 'warn') { item.classList.add('warning');  cb.textContent = '!'; }
+    if (state === 'none') { cb.textContent = ''; }
+    updateInspectStats();
+  }
+
+  function updateInspectStats() {
+    const all = document.querySelectorAll('.inspect-item');
+    const ok = document.querySelectorAll('.inspect-item.checked').length;
+    const flagged = document.querySelectorAll('.inspect-item.flagged').length;
+    const warned = document.querySelectorAll('.inspect-item.warning').length;
+    const done = ok + flagged + warned;
+    const total = all.length;
+    const pct = total > 0 ? Math.round(done/total*100) : 0;
+
+    const el = document.getElementById('inspect-stats');
+    if (!el) return;
+    el.innerHTML = `
+      <span class="inspect-summary-label">Progress</span>
+      <div class="inspect-progress"><div class="inspect-progress-fill" style="width:${pct}%"></div></div>
+      <span class="inspect-stat" style="color:var(--muted)">${done}/${total}</span>
+      <span class="inspect-stat" style="color:var(--good)">✓ ${ok} OK</span>
+      ${warned > 0 ? `<span class="inspect-stat" style="color:var(--warn)">! ${warned} Monitor</span>` : ''}
+      ${flagged > 0 ? `<span class="inspect-stat" style="color:var(--danger)">✗ ${flagged} Issues</span>` : ''}
+      <button class="inspect-print-btn" onclick="printInspection()">⬇ Export Report</button>
+    `;
+  }
+
+  function printInspection() {
+    const items = document.querySelectorAll('.inspect-item');
+    let report = 'VISUAL INSPECTION REPORT\n' + '='.repeat(50) + '\n\n';
+    let lastSection = '';
+    items.forEach(item => {
+      const section = item.closest('.inspect-section').querySelector('.inspect-section-title').textContent;
+      if (section !== lastSection) { report += '\n' + section.toUpperCase() + '\n' + '-'.repeat(30) + '\n'; lastSection = section; }
+      const name = item.querySelector('.inspect-name').childNodes[0].textContent.trim();
+      const state = item.classList.contains('checked') ? 'OK' : item.classList.contains('flagged') ? 'ISSUE' : item.classList.contains('warning') ? 'MONITOR' : 'NOT CHECKED';
+      report += `[\${state}] \${name}\n`;
+    });
+    const blob = new Blob([report], {type:'text/plain'});
+    const a = document.createElement('a');
+    a.href = URL.createObjectURL(blob);
+    a.download = 'visual_inspection_report.txt';
+    a.click();
+  }
+
+  // ─── BUILD INSPECTION TAB ─────────────────────────────────────────────────────
+  function buildInspectionTab(mileage, engineType, drivetrain, usage, isNewOwner) {
+    const severe = (usage === 'towing' || usage === 'offroad' || usage === 'city');
+    const has4wd = (drivetrain === '4wd' || drivetrain === '4wdfull');
+    const hasAwd = (drivetrain === 'awd');
+    const isAllWheel = has4wd || hasAwd;
+    const highMileage = mileage >= 75000;
+    const veryHigh = mileage >= 125000;
+
+    function item(id, name, priority, detail, lookFor) {
+      const pClass = priority === 'safety' ? 'priority-safety' : priority === 'important' ? 'priority-important' : 'priority-routine';
+      const pLabel = priority === 'safety' ? 'Safety Critical' : priority === 'important' ? 'Important' : 'Routine';
+      return `
+        <div class="inspect-item" id="inspect-\${id}" onclick="void(0)">
+          <div class="inspect-checkbox"></div>
+          <div class="inspect-content">
+            <div class="inspect-name">
+              \${name}
+              <span class="inspect-priority \${pClass}">\${pLabel}</span>
+            </div>
+            <div class="inspect-detail">\${detail}</div>
+            <div class="inspect-what-to-look">
+              <strong>What to look for</strong>
+              \${lookFor}
+            </div>
+            <div class="inspect-flag-btns">
+              <button class="inspect-btn inspect-btn-ok" onclick="event.stopPropagation();setInspect('\${id}','ok')">✓ OK</button>
+              <button class="inspect-btn inspect-btn-warn" onclick="event.stopPropagation();setInspect('\${id}','warn')">! Monitor</button>
+              <button class="inspect-btn inspect-btn-flag" onclick="event.stopPropagation();setInspect('\${id}','flag')">✗ Issue Found</button>
+            </div>
+          </div>
+        </div>`;
+    }
+
+    function section(icon, title, items) {
+      return `<div class="inspect-section">
+        <div class="inspect-section-header" onclick="toggleSection(this)">
+          <span class="inspect-section-icon">\${icon}</span>
+          <span class="inspect-section-title">\${title}</span>
+          <span class="inspect-section-count">\${items.split('inspect-item').length - 1} items</span>
+          <span class="inspect-chevron">▼</span>
+        </div>
+        <div class="inspect-items">\${items}</div>
+      </div>`;
+    }
+
+    let html = `
+      <div class="new-owner-alert" style="margin-bottom:20px;\${isNewOwner ? '' : 'display:none'}">
+        <div class="alert-title">🔑 New Owner — Full Inspection Recommended</div>
+        <div class="alert-body">Since you just acquired this vehicle, perform ALL inspection items below before driving long distances. Pay special attention to Safety Critical items.</div>
+      </div>
+      <div class="inspect-summary-bar" id="inspect-stats">
+        <span class="inspect-summary-label">Progress</span>
+        <div class="inspect-progress"><div class="inspect-progress-fill" style="width:0%"></div></div>
+        <span class="inspect-stat" style="color:var(--muted)">0/0 items</span>
+        <button class="inspect-print-btn" onclick="printInspection()">⬇ Export Report</button>
+      </div>
+    `;
+
+    // ── ENGINE BAY ──────────────────────────────────────────────────────────────
+    let engineItems = '';
+    engineItems += item('oil-color', 'Engine Oil Color & Level', 'safety',
+      `Pull dipstick, wipe clean, reinsert fully, pull again. Oil should be between MIN and MAX marks.`,
+      `Fresh oil: golden/amber. Old oil: dark brown/black. <strong>Red flags:</strong> Milky/frothy oil (coolant leak / head gasket failure), metal flakes on dipstick (internal wear), extremely gritty oil (overdue change). Level below MIN = add oil immediately.'`);
+
+    engineItems += item('oil-cap', 'Oil Filler Cap & Underside', 'safety',
+      `Remove the oil filler cap and inspect the underside and inside the cap.`,
+      `Should be clean or lightly oily. <strong>Red flags:</strong> Thick white/creamy sludge (coolant mixing with oil — head gasket or cracked block). Brown froth = moisture contamination. Any sludge buildup = infrequent oil changes.'`);
+
+    engineItems += item('coolant-level', 'Coolant Level & Color', 'safety',
+      `Check coolant reservoir (NOT radiator cap when hot). Level should be between MIN and MAX.`,
+      `Toyota/Honda: pink-red. GM/Chevy: orange or yellow. Ford: orange or yellow. <strong>Red flags:</strong> Rusty/brown coolant (degraded, needs flush), oily film on top (head gasket leak), bubbles when engine running (combustion gases entering cooling system), level consistently drops (external or internal leak).'`);
+
+    engineItems += item('coolant-cap', 'Radiator Cap Pressure Test', 'important',
+      `With engine COLD, inspect radiator cap condition and spring pressure.`,
+      `Cap spring should have firm resistance. Rubber seal should be soft and pliable. <strong>Red flags:</strong> Cracked, brittle, or deformed seal (replace cap — costs $10-15), weak spring tension (cap not holding pressure = overheating risk), white mineral deposits around cap seat.'`);
+
+    if (engineType !== 'electric') {
+      engineItems += item('serpentine-visual', 'Serpentine / Drive Belt Condition', 'safety',
+        `Visually inspect the belt running the alternator, A/C, and water pump with engine OFF.`,
+        `Belt should be smooth and black with no visible wear. <strong>Red flags:</strong> Cracks or cuts on the inner (ribbed) side — count ribs with cracks (3+ cracked ribs = replace immediately), fraying edges, glazed/shiny surface (slipping), missing chunks, squealing noise when engine runs = imminent failure.'`);
+
+      engineItems += item('timing-cover', 'Timing Belt / Chain Cover Inspection', 'safety',
+        `Visually inspect timing cover for oil leaks and integrity.`,
+        `<strong>Red flags:</strong> Oil seeping from timing cover gasket (seal failure), cracks in cover, visible timing belt fraying if cover is open. For chain engines: listen for rattling at startup (stretched chain). On belt engines at 60k+: ask when last replaced if unknown.'`);
+    }
+
+    engineItems += item('air-filter-visual', 'Engine Air Filter Condition', 'important',
+      `Remove filter housing lid and visually inspect the paper or cotton element.`,
+      `New filter: white/cream pleated paper. <strong>Replace if:</strong> Dark grey/black throughout (restricted airflow = poor fuel economy), visibly dirty pleats clogged with debris, oil soaked (PCV system issue), holes or tears in element, compressed or deformed shape.'`);
+
+    engineItems += item('brake-fluid-color', 'Brake Fluid Color & Level', 'safety',
+      `Check master cylinder reservoir WITHOUT opening. Level should be between MIN and MAX.`,
+      `New fluid: clear to light yellow. Old fluid: dark yellow to brown. <strong>Red flags:</strong> Dark brown/black fluid (moisture-saturated, brake fade risk), level at or below MIN (possible leak or extremely worn pads), oily residue on outside of reservoir (seal failure). If dark — test with brake fluid tester strip.'`);
+
+    if (engineType !== 'electric') {
+      engineItems += item('trans-fluid', 'Transmission Fluid Condition', 'safety',
+        `Check dipstick (if accessible) or inspect for leaks under vehicle. CVT/sealed units: check for leaks only.`,
+        `ATF should be: bright red (new) to dark red (used but OK). <strong>Red flags:</strong> Brown/black fluid (burnt — internal damage), burnt smell on dipstick, milky/foamy fluid (water contamination), metal particles on dipstick, level low (leak present). For CVT: only use OEM-specified fluid.'`);
+    }
+
+    engineItems += item('hoses', 'Coolant Hoses & Clamps', 'safety',
+      `Squeeze upper and lower radiator hoses with engine COLD. Inspect clamps and connections.`,
+      `<strong>Upper hose:</strong> Should be firm but slightly pliable — not rock-hard or mushy. <strong>Red flags:</strong> Hard/brittle hose (internal cracking = imminent failure), soft/spongy/swollen areas (bulge = burst risk), visible cracks, white residue at clamps (previous leak), any drips or stains on hoses or clamps. Check heater hoses behind engine too.'`);
+
+    engineItems += item('battery-terminals', 'Battery Terminals & Condition', 'safety',
+      `Inspect battery top, terminals, and tray area with flashlight. Do not touch terminals with metal objects.`,
+      `<strong>Red flags:</strong> Blue/white fuzzy corrosion on terminals (clean with baking soda + water — worn gloves), cracked or swollen battery case (replace immediately — dangerous), acid stains on tray, loose terminal connections (wiggle test — should not move), battery case bulging on sides (heat damage). Check date sticker — replace every 5 years.'`);
+
+    if (highMileage) {
+      engineItems += item('valve-cover', 'Valve Cover Gasket Leak Check', 'important',
+        `Inspect around valve cover edges for oil seepage. Common failure point on higher-mileage vehicles.`,
+        `Look for dark oily residue along the seam between valve cover and cylinder head. <strong>Red flags:</strong> Active dripping, oil baked onto exhaust manifold (smoke/burning smell), oil pooling on intake manifold. Valve cover gasket replacement is typically $100-300 labor.'`);
+    }
+
+    if (veryHigh) {
+      engineItems += item('pcv-hose', 'PCV Valve Hose Condition', 'important',
+        `Locate PCV hose connecting valve cover to intake. Inspect for cracks or collapse.`,
+        `<strong>Red flags:</strong> Cracked, hardened, or collapsed hose (causes rough idle, oil consumption, high crankcase pressure). Disconnect PCV valve and shake it — should rattle. No rattle = stuck/clogged PCV. Replacement is typically under $30 for parts.'`);
+    }
+
+    html += section('🔧', 'Engine Bay', engineItems);
+
+    // ── BRAKES ──────────────────────────────────────────────────────────────────
+    let brakeItems = '';
+    brakeItems += item('brake-pads', 'Brake Pad Thickness', 'safety',
+      `Look through wheel spokes at the brake rotor and caliper. The pad material should be visible pressed against the rotor.`,
+      `Minimum safe thickness: ~3mm (about the width of a thick coin). <strong>Replace if:</strong> Pad is thinner than the metal backing plate, squealing noise when braking (wear indicator contact), grinding/scraping sound (metal on metal — rotor damage), vibration when braking. Measure all 4 corners — uneven wear indicates caliper or alignment issues.'`);
+
+    brakeItems += item('brake-rotors', 'Brake Rotor Surface & Wear', 'safety',
+      `Inspect rotor face through wheel spokes using a flashlight. Run finger along rotor edge to feel for grooves.`,
+      `<strong>OK:</strong> Light surface rust on non-contact area (normal). <strong>Red flags:</strong> Deep grooves or scoring on contact surface (rotor needs replacement), hard blue/brown spots from heat (warped rotor — causes pulsation), heavy rust coating (possible if sat unused — may self-clean with a few stops), rotor edge lip thicker than 2mm above contact surface (severely worn). Minimum rotor thickness is stamped on rotor hat.'`);
+
+    brakeItems += item('brake-calipers', 'Brake Caliper Condition & Slide Pins', 'safety',
+      `Look for caliper bracket condition, bleeder screw, and inspect for fluid leaks around caliper seals.`,
+      `<strong>Red flags:</strong> Uneven pad wear between inner and outer pad (stuck slide pin — causes premature wear and pulling), brake fluid seeping from behind caliper (seal failure — spongy pedal), corrosion/seizure on caliper bracket, heat discoloration on caliper body from dragging. A seized caliper causes the vehicle to pull to one side when braking.'`);
+
+    brakeItems += item('brake-lines', 'Brake Lines & Flexible Hoses', 'safety',
+      `Visually trace brake lines from master cylinder to each wheel. Inspect flexible rubber hoses at each corner.`,
+      `<strong>Hard lines:</strong> Look for rust pitting, kinks, dents, or bubbling paint (corrosion from inside). <strong>Flexible hoses:</strong> Should be smooth rubber — no swelling, cracking, or twisting. <strong>Red flags:</strong> Any seeping fluid, swollen/bubbled sections (hose failure under pressure), corrosion on hard lines. In northern states, brake line rust is a common failure point on older vehicles.'`);
+
+    brakeItems += item('parking-brake', 'Parking Brake Function', 'safety',
+      `On a level surface, engage parking brake fully, then release service brakes. Vehicle should not roll.`,
+      `<strong>Test:</strong> Engage on slight incline — should hold vehicle securely. Cable-operated type: count clicks — should engage firmly within 3-7 clicks. <strong>Red flags:</strong> Lever/pedal travels too far with little resistance (stretched cable or worn rear pads), vehicle rolls on incline with brake engaged (adjustment needed or rear disc/drum worn), ratchet mechanism that doesn't hold.'`);
+
+    html += section('🛑', 'Brakes', brakeItems);
+
+    // ── TIRES & WHEELS ──────────────────────────────────────────────────────────
+    let tireItems = '';
+    tireItems += item('tread-depth', 'Tire Tread Depth — All 4 Corners', 'safety',
+      `Use a tread depth gauge or the Lincoln penny test at multiple points across each tire width.`,
+      `<strong>Penny test:</strong> Insert penny head-first into tread — if you see Lincoln's entire head, tread is below 2/32" (replace immediately — illegal in most states). <strong>Quarter test:</strong> If you see Washington's head, you have ~4/32" left (start shopping). <strong>New tire:</strong> 10/32" of tread. <strong>Legal minimum:</strong> 2/32". Check tread at inner, center, and outer edges — uneven wear pattern indicates alignment or inflation issues.'`);
+
+    tireItems += item('tire-wear-pattern', 'Tire Wear Pattern Analysis', 'safety',
+      `Inspect wear pattern across the width and around the circumference of each tire.`,
+      `<strong>Center wear</strong> (middle worn more): Over-inflated — reduce pressure. <strong>Edge wear</strong> (both edges worn): Under-inflated — increase pressure. <strong>One-side edge wear</strong> (inner or outer): Camber misalignment — needs alignment. <strong>Cupping/scalloping</strong> (wavy patches): Worn shocks/struts or wheel imbalance. <strong>Feathering</strong> (edges pointed on one side): Toe misalignment. Any of these patterns require immediate attention.'`);
+
+    tireItems += item('tire-sidewall', 'Tire Sidewall & Bead Condition', 'safety',
+      `Run hand along entire sidewall of each tire while slowly rotating. Inspect with flashlight.`,
+      `<strong>Red flags:</strong> Bulge or bubble in sidewall (internal cord failure — tire can blow out at any speed), cuts or slashes to belt layer, cracking/crazing from UV aging (especially on older tires regardless of tread), exposed belt cords (tire is unsafe). Check date code (DOT): last 4 digits = week/year. Tires over 6-7 years old should be replaced regardless of tread.'`);
+
+    tireItems += item('tire-pressure', 'Tire Pressure — All 4 + Spare', 'safety',
+      `Check cold inflation pressure with gauge at all 4 tires plus spare before driving (when cold = parked 3+ hours).`,
+      `Correct pressure is on door jamb sticker (NOT on tire sidewall — that's max pressure). Typical passenger car: 32-36 psi. Trucks: 35-45 psi. Spare (compact): 60 psi. <strong>Note:</strong> Pressure drops ~1 psi for every 10°F temperature drop. Underinflation causes heat buildup and blowouts. Check TPMS — it only warns at 25% below recommended.'`);
+
+    tireItems += item('wheel-lug-nuts', 'Wheel Lug Nuts & Wheels', 'safety',
+      `Visually inspect all lug nuts for presence and condition. Look for wheel damage.`,
+      `<strong>Red flags:</strong> Missing lug nuts (wheel will loosen — dangerous), rounded or stripped lug nuts (improper removal), rust streaking from lug holes (loose wheel history), bent or cracked wheel (replace — no repair), impact damage on rim edges, lug nuts with different styles mixed (improper fitment). Torque spec varies by vehicle — typically 80-120 ft-lbs for passenger cars.'`);
+
+    tireItems += item('wheel-bearings', 'Wheel Bearing Check', 'safety',
+      `Grab top and bottom of each tire and try to rock it. Also push/pull side to side.`,
+      `<strong>OK:</strong> Virtually no play felt in any direction. <strong>Red flags:</strong> Any noticeable play or clunking felt when rocking (bearing wear — can lead to wheel detachment at highway speed), grinding/humming noise that changes with vehicle speed or steering input (bad bearing — replace soon), vehicle pulling to one side when bearing is loaded. On a lift: spin each wheel — any roughness or rumbling = bad bearing.'`);
+
+    html += section('🔄', 'Tires & Wheels', tireItems);
+
+    // ── SUSPENSION & STEERING ────────────────────────────────────────────────────
+    let suspItems = '';
+    suspItems += item('shock-absorbers', 'Shock Absorbers / Struts', 'important',
+      `Push down firmly on each corner of the vehicle and release. Count bounces. Also inspect shock body for leaks.`,
+      `<strong>Bounce test:</strong> Vehicle should return to level in 1-2 bounces maximum. More than 2 = worn shocks. <strong>Visual:</strong> Look for oil seeping from shock/strut body (seal failure), heavy corrosion on body, bent or damaged strut rod. <strong>Symptoms of worn shocks:</strong> Nose dives under braking, rear squats under acceleration, excessive body roll in corners, bouncy/floaty ride, tires leaving ground on bumps. Worn shocks increase stopping distance by up to 20%.'`);
+
+    suspItems += item('ball-joints-inspect', 'Ball Joints Visual & Movement Check', 'safety',
+      `With vehicle on ground, attempt to shake tire top-to-bottom. On a lift: use pry bar to check vertical play.`,
+      `<strong>Red flags:</strong> Any vertical play in tire when grabbed at top and bottom and rocked (worn upper/lower ball joint — can separate suddenly causing complete loss of steering control), squeaking/clunking over bumps, uneven tire wear, vehicle wandering while driving straight. Lower ball joints carry vehicle weight and wear faster than upper. Inspect grease boot — torn boot = contamination and rapid wear.'`);
+
+    suspItems += item('tie-rods-inspect', 'Tie Rod Ends & Steering Linkage', 'safety',
+      `With vehicle on ground, grab tire at 3 and 9 o'clock and try to move side to side. Check tie rod boots.`,
+      `<strong>Red flags:</strong> Any lateral play felt (worn tie rod end — causes wheel to toe in/out randomly = dangerous at speed), cracked or torn tie rod boots (water/dirt contamination = rapid wear), loose steering feel or "play" in the wheel, clunking when turning. Inner tie rod can be checked by gripping the rod shaft through the boot — should not have any rotation. Worn tie rods cause rapid uneven tire wear.'`);
+
+    suspItems += item('sway-bar-links', 'Sway Bar Links & Bushings', 'important',
+      `Inspect sway bar end links connecting the bar to the strut/control arm, and center bushings.`,
+      `<strong>Red flags:</strong> Rattling/clunking over bumps (especially speed bumps — this is a hallmark symptom), cracked or deteriorated rubber bushings on center mounts, end link ball studs with play when wiggled, bent end links. Failure causes excessive body roll in corners. End links are typically under $50 in parts and easy to replace.'`);
+
+    suspItems += item('control-arms', 'Control Arm Bushings', 'important',
+      `Inspect rubber/polyurethane bushings at control arm pivot points. Use flashlight.`,
+      `<strong>Red flags:</strong> Cracked, torn, or deteriorated rubber bushing (allows excessive arm movement = vibration, noise, handling issues), bushing collapsed out of housing, metal-on-metal contact visible, squeaking when going over bumps. Lower control arm bushings wear faster than upper. Failure causes: steering wander, clunking, brake pulling, accelerated tire wear.'`);
+
+    suspItems += item('steering-rack', 'Power Steering / Steering Rack Inspection', 'important',
+      `Check for fluid leaks at rack boots and hose connections (hydraulic PS) or inspect electric PS motor (EPS).`,
+      `<strong>Hydraulic PS:</strong> Look for fluid seeping from rack boots or hose connections, check PS fluid reservoir level and color (should be clear or slightly amber). <strong>Electric PS:</strong> No fluid — check for warning lights, verify steering feel is consistent (heavy at low speed = motor issue). <strong>Red flags:</strong> Groan/moan on full lock, leaking PS fluid, excessive steering play, inconsistent assist.'`);
+
+    html += section('⚙️', 'Suspension & Steering', suspItems);
+
+    // ── UNDER VEHICLE ────────────────────────────────────────────────────────────
+    let underItems = '';
+    underItems += item('fluid-leaks', 'Fluid Leak Detection — Full Undercarriage', 'safety',
+      `Park on clean concrete for 30 minutes, then pull forward and inspect. Also inspect from underneath with flashlight.`,
+      `<strong>Location tells you what is leaking:</strong> Front/center under engine = oil or coolant. Transmission tunnel = trans fluid (red). Rear axle = diff fluid (gear oil smell). Rear corners = brake fluid (clear/yellow — DANGEROUS). Any drips. <strong>Colors:</strong> Dark brown/black = engine oil, bright red = ATF, light green/orange = coolant, clear = brake fluid or water (AC condensate is normal). Any active leak should be investigated immediately.'`);
+
+    underItems += item('exhaust-system', 'Exhaust System Integrity', 'safety',
+      `With engine running briefly in open area, listen for exhaust leaks. Inspect pipes and hangers visually.`,
+      `<strong>Red flags:</strong> Ticking/popping sound from exhaust manifold area (cracked manifold or gasket — exhaust gases can enter cabin — carbon monoxide risk), holes in muffler or pipes (loud exhaust), broken or missing rubber hangers (pipe dragging), heavy rust perforation, welds cracked open. A leaking exhaust manifold gasket is a safety hazard beyond just noise. Tap pipes lightly — hollow sound vs solid rusted sound.'`);
+
+    underItems += item('cv-axles', 'CV Axle Boots Condition (FWD/AWD)', 'important',
+      `Inspect the rubber CV joint boots on both ends of each front axle (and rear on AWD/4WD).`,
+      `<strong>Red flags:</strong> Cracked or torn CV boot with grease splattered on surrounding components (once torn, the joint gets dirty and fails — typically within 6-12 months), black grease splatter on inner wheel well or subframe (torn inner boot), clicking noise on full lock turns (worn CV joint — boot was previously torn). Replacing just the boot is cheap; replacing the entire axle shaft costs more. Check rear axle boots on AWD vehicles too.'`);
+
+    if (isAllWheel) {
+      underItems += item('diff-seals', 'Differential Seals & Vent (AWD/4WD)', 'important',
+        `Inspect differential housing for fluid seepage at pinion seal, axle seals, and drain plug.`,
+        `<strong>Red flags:</strong> Gear oil (strong sulfur smell) seeping from pinion seal at front of diff housing or axle tubes (axle seal failure), oil level low when checked at fill plug (leak = bearing and gear damage). Check differential vent tube for clogging (blocked vent pressurizes housing = seal failure). Normal: very light dampness at seals after many miles. Replace seals if active dripping is present.'`);
+
+      underItems += item('transfer-case-visual', 'Transfer Case Inspection (4WD/AWD)', 'important',
+        `Inspect transfer case housing for leaks and mounting condition.`,
+        `<strong>Red flags:</strong> Gear oil seeping from any seam or seal (fill plug, drain plug, shaft seals), grinding noise when engaging 4WD (damaged sector or damaged internals), 4WD light flickering or engaging intermittently (electronic actuator failure). Check the transfer case skid plate if equipped — bent plate may have contacted the case. Fluid level check: fluid should be at fill plug level when removed.'`);
+    }
+
+    underItems += item('frame-subframe', 'Frame / Subframe Rust Inspection', 'safety',
+      `In rust-prone states (salt belt): Critically inspect frame, subframe, and crossmembers for structural rust.`,
+      `<strong>Red flags:</strong> Scale rust (heavy flaking rust that can be easily scraped away) on frame rails — tap with hammer, hollow sound = severe internal rust. Rust perforation (holes through metal), rust at body/frame mounting points (structural integrity compromised), cracked welds at frame joints. <strong>This is a vehicle write-off scenario if severe.</strong> Surface rust (paint bubbling) is less serious but should be treated. Critical on trucks used in northern states.'`);
+
+    underItems += item('catalytic-converter', 'Catalytic Converter Check', 'important',
+      `Inspect catalytic converter housing and heat shield. Shake/rattle test.`,
+      `<strong>Red flags:</strong> Rattling from cat when tapping (internal honeycomb broken loose — creates restriction = engine damage over time), loose or missing heat shield (fire hazard in tall grass), physical damage from road debris, cut marks from theft attempts (catalytic converter theft is extremely common — check welds at inlet/outlet pipes). A clogged cat causes power loss and can trigger check engine codes P0420/P0430.'`);
+
+    html += section('🔍', 'Under Vehicle', underItems);
+
+    // ── EXTERIOR ─────────────────────────────────────────────────────────────────
+    let extItems = '';
+    extItems += item('headlights-taillights', 'All Lights Function Test', 'safety',
+      `Walk around vehicle with all lighting modes active: headlights, high beams, taillights, brake lights, turn signals, reverse lights, hazards.`,
+      `<strong>Check all circuits:</strong> Low beams (both), high beams (both), both rear taillights, both brake lights, both turn signals front and rear, both reverse lights (R in gear), all hazards. <strong>Red flags:</strong> Any non-functioning bulb (in some states a ticket offense), yellowed/hazy headlight lenses (reduces output up to 80% — restoration kit or replacement), water intrusion inside headlight housing (condensation = seal failure), LED/HID flicker (driver module issue). Verify brake lights with a helper or camera.'`);
+
+    extItems += item('windshield', 'Windshield & Glass Inspection', 'safety',
+      `Inspect windshield for cracks, chips, and delamination. Check all other glass.`,
+      `<strong>Red flags:</strong> Any crack in driver's critical vision zone (typically 12"x12" centered in front of driver) — may fail inspection. Star/bull's-eye chip in driver sightline — repair before it propagates. Long cracks that extend from edge (will spread with temperature changes). Delamination (white/milky areas between glass layers — structural weakness). Inspect door glass channels — torn or missing seals cause leaks and wind noise.'`);
+
+    extItems += item('wiper-blades-visual', 'Wiper Blade Inspection', 'safety',
+      `Turn wipers on with water. Observe full wipe cycle. Inspect blade rubber manually.`,
+      `<strong>Red flags:</strong> Streaking in either direction (contaminated or worn rubber), skipping/chattering (hardened rubber or bent arm), squealing (glazed rubber), not clearing full wipe pattern (bent arm), torn rubber exposing metal (will scratch windshield). Run finger along rubber — should be smooth and pliable. Blades should be replaced annually regardless of appearance. Also check rear wiper if equipped.'`);
+
+    extItems += item('body-seals', 'Door, Trunk & Hood Seals', 'routine',
+      `Inspect all rubber weatherstripping seals on doors, trunk, hood, and sunroof.`,
+      `<strong>Red flags:</strong> Torn or missing sections (water and wind leak), hardened/cracked rubber (no longer seals), deformed seal that doesn't spring back (replace), wind noise at highway speed from specific door (seal gap). Silicone spray on rubber seals annually prevents drying and cracking. Check sunroof drain tubes — clogged drains cause interior water damage. Test by slowly pouring water in sunroof channel and verifying it drains outside the vehicle.'`);
+
+    extItems += item('paint-underbody', 'Paint Condition & Rust Spots', 'routine',
+      `Inspect paint for rust bubbles, chips exposing metal, and panel gap consistency.`,
+      `<strong>Red flags:</strong> Rust bubbles under paint (oxidation expanding beneath clear coat — will worsen rapidly), chips at wheel arches (stone chips cause rust starting points), inconsistent panel gaps (crash damage / poor repair), color mismatch between panels (repainted after accident — affects resale and possibly structural integrity). Check rockers/sills and wheel arches closely. Use a magnet through cloth — bondo/filler won't attract magnet like metal.'`);
+
+    html += section('🚗', 'Exterior & Lighting', extItems);
+
+    // ── INTERIOR & ELECTRICAL ────────────────────────────────────────────────────
+    let intItems = '';
+    intItems += item('dashboard-lights', 'Warning Lights & Dashboard Scan', 'safety',
+      `Turn ignition to ON (engine off) — all warning lights should illuminate. Start engine — all should extinguish.`,
+      `<strong>Any light remaining on after startup requires investigation:</strong> Check Engine (CEL/MIL) — scan for codes with OBD2 reader. ABS light — ABS system fault, braking affected. Brake warning (red) — brake fluid low or parking brake not released. Oil pressure light — shut off engine immediately if illuminated while running. Battery light — charging system fault. Airbag/SRS — airbag may not deploy in crash. TPMS — check tire pressure.'`);
+
+    intItems += item('ac-heat', 'A/C & Heating System', 'important',
+      `Run A/C on MAX COLD for 3-5 minutes. Then test heater on MAX HOT.`,
+      `<strong>A/C checks:</strong> Cold air output within 60 seconds (low refrigerant if slow), musty smell from vents (cabin filter clogged or evaporator mold), rattling from blower (debris in housing). <strong>Heater checks:</strong> Hot air within 2-3 minutes (coolant temperature warm — thermostat opening), even heat from all vents (heater core not blocked), no sweet smell (coolant leak from heater core — foggy windshield, sweet smell = heater core failure). Check all fan speeds and vent modes.'`);
+
+    intItems += item('power-windows-locks', 'Power Windows, Locks & Mirrors', 'routine',
+      `Operate all power windows fully up and down. Test all door locks and mirrors.`,
+      `<strong>Red flags:</strong> Slow or sluggish window operation (regulator or motor wearing out), grinding sound during operation (stripped regulator gear), window not staying up (worn regulator), door lock actuator clicking without locking (actuator failure), mirror not moving in one direction (broken motor gear). Test driver window auto-up/down function if equipped. Cold weather can expose failing regulators — motors work harder in the cold.'`);
+
+    intItems += item('seat-belts-interior', 'Seat Belts Function & Condition', 'safety',
+      `Pull each seat belt out fully and examine webbing. Test latch engagement.`,
+      `<strong>Red flags:</strong> Frayed, cut, or discolored webbing (replace — will not provide rated protection), belt that doesn't retract fully (spring failure), latch that requires excessive force or releases too easily, belt that won't lock during forward jerk (pretensioner issue after collision). Check rear seat belts too — often ignored. Any belt that was involved in a previous collision must be replaced even if it looks undamaged (pretensioner is single-use).'`);
+
+    intItems += item('obd2-scan', 'OBD2 Fault Code Scan', 'safety',
+      `Connect OBD2 scanner to the port (under dash, driver side). Read all stored and pending codes.`,
+      `<strong>Even if no check engine light is on,</strong> there may be pending codes (P0xxx = powertrain, B0xxx = body, C0xxx = chassis, U0xxx = network). Document all codes. Key codes to investigate: P0420/P0430 (catalytic converter), P0300 series (misfires), P0171/P0174 (lean condition), C1xxx (ABS/stability), U0100 (CAN bus fault). An OBD2 reader is ~$25 and is the single most powerful diagnostic tool for used vehicle inspection.'`);
+
+    if (highMileage) {
+      intItems += item('compression-test', 'Engine Compression Test (High Mileage)', 'important',
+        `For vehicles over 75,000 miles: a compression test reveals cylinder health without engine disassembly.`,
+        `All cylinders should read within 15 psi of each other and above 130 psi (varies by engine spec). <strong>Red flags:</strong> One cylinder significantly lower than others (worn rings, damaged valve, or head gasket). Two adjacent cylinders low (head gasket failure between cylinders). All cylinders low (timing issue or general wear). A cylinder leakdown test provides even more detail. Ask a shop to perform if buying used.'`);
+    }
+
+    html += section('⚡', 'Interior & Electrical', intItems);
+
+    // ── FLUIDS SUMMARY ───────────────────────────────────────────────────────────
+    let fluidItems = '';
+    fluidItems += item('power-steering-fluid-check', 'Power Steering Fluid Check', 'routine',
+      `For hydraulic PS systems: check reservoir. For electric PS: no fluid to check.`,
+      `Hydraulic PS fluid should be full and clear/amber colored. <strong>Red flags:</strong> Dark brown or foamy fluid (contaminated), low level (leak in rack or hose), whining noise on steering input (low fluid or pump wear). For EPS vehicles: check for steering feel inconsistency or EPS warning light. Note: Most modern vehicles use EPS (no fluid).'`);
+
+    fluidItems += item('windshield-washer', 'Washer Fluid Level & Function', 'routine',
+      `Check reservoir level and test nozzle spray pattern.`,
+      `Use proper washer fluid — not plain water (freezes, no cleaning agents). Nozzle should produce even fan spray centered on wipers' sweep zone. <strong>Red flags:</strong> Clogged nozzle (clean with pin), weak pump (pump wearing out), leaking reservoir. In winter: ensure fluid is rated for temperatures below local lows. Never use automotive antifreeze in washer reservoir — it damages paint.'`);
+
+    fluidItems += item('differential-fluid-check', 'Differential Fluid Level & Condition', 'important',
+      `For RWD/4WD/AWD vehicles: check rear differential fill plug. Front diff on 4WD.`,
+      `Remove fill plug (typically 3/8" square drive) — fluid should be at plug level. Should smell like gear oil (strong sulfur). <strong>Red flags:</strong> Metallic smell (gear wear), milky/grey color (water contamination from submerged or seal failure), level low (leak), no fluid present (catastrophic — do not drive). Used diff fluid is dark but normal — check level and smell primarily.'`);
+
+    html += section('💧', 'Fluids', fluidItems);
+
+    // Trigger stats update after render
+    return html;
+  }
+
+  // Allow Enter key to trigger analysis
+  document.addEventListener('keydown', function(e) {
+    if (e.key === 'Enter') analyze();
+  });
+</script>
+</body>
+</html>
